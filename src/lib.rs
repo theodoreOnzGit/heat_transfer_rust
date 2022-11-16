@@ -1,3 +1,9 @@
+#![warn(missing_docs)]
+
+
+pub mod NusseltCorrelations;
+
+
 pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
