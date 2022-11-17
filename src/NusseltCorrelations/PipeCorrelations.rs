@@ -42,6 +42,10 @@
 ///
 /// ```
 ///
+/// Note that there is a discontinuity at Re = 2000
+/// and that this is test bay data...
+/// When heater was installed in CIET, there were different results
+///
 pub fn nusselt_ciet_heater_v1_0(Re: f64)-> f64 {
 
     if Re >= 2000_f64 {
