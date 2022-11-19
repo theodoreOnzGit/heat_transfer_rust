@@ -55,3 +55,59 @@ pub fn nusselt_ciet_heater_v1_0(Re: f64)-> f64 {
     return 8.0;
 
 }
+
+
+/// Dittus Boelter Correlation
+///
+/// https://www.e3s-conferences.org/articles/e3sconf/pdf/2017/01/e3sconf_wtiue2017_02008.pdf
+///
+///
+/// Meant for turbulent flow
+/// Smooth surface tubes
+/// Heiss, J. F., & Coull, J. (1951). Nomograph of Dittus-Boelter 
+/// equation for heating and cooling 
+/// liquids. Industrial & Engineering Chemistry, 43(5), 1226-1229.
+///
+///
+/// http://herve.lemonnier.sci.free.fr/TPF/NE/Winterton.pdf
+///
+/// 
+///
+pub fn dittus_boelter_correlation(Re: f64, Pr: f64) -> f64 {
+    panic!("not implemented");
+    return 0.0;
+}
+
+/// Sieder Tate Relationship
+///
+/// https://www.e3s-conferences.org/articles/e3sconf/pdf/2017/01/e3sconf_wtiue2017_02008.pdf
+///
+/// https://www.nuclear-power.com/nuclear-engineering/heat-transfer/convection-convective-heat-transfer/sieder-tate-equation/
+///
+/// Note that properties here are evaluated at Tavg (ie average bulk fluid
+/// temperature)
+///
+/// For pipe or heat exchanger,
+/// it could be 
+///
+/// Tavg = (T_outlet + T_inlet)/2
+///
+///
+///
+/// meant for turbulent flow
+pub fn sieder_tate_correlation(Re: f64, Pr: f64) -> f64 {
+    panic!("not implemented");
+    return 0.0;
+}
+
+/// Gnielinski Equation
+///
+///
+/// https://www.e3s-conferences.org/articles/e3sconf/pdf/2017/01/e3sconf_wtiue2017_02008.pdf
+///
+/// turbulent flow, all kinds of tubes
+///
+pub fn gnielinski_correlation(Re: f64, Pr: f64) -> f64 {
+    panic!("not implemented");
+    return 0.0;
+}
