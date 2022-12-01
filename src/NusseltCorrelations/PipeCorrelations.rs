@@ -122,6 +122,13 @@ pub fn nusselt_ciet_heater_v1_0(Re: f64)-> f64 {
 /// max_relative=0.01);
 /// ```
 ///
+///https://www.nuclear-power.com/nuclear-engineering/heat-transfer/convection-convective-heat-transfer/sieder-tate-equation/
+///
+/// Unfortunately, Dittus Boelter correlation is valid
+/// only for small to moderate temperature differences
+///
+/// For larger temperature differences, use Sieder-Tate
+/// 
 /// 
 ///
 pub fn dittus_boelter_correlation(Re: f64, Pr: f64,
@@ -152,12 +159,97 @@ pub fn dittus_boelter_correlation(Re: f64, Pr: f64,
 ///
 /// Tavg = (T_outlet + T_inlet)/2
 ///
+/// the Re, Pr is generally evaluated at fluid temperature
+/// whereas the fluid viscosity ratio is the ratio of viscosity at
+/// the bulk fluid temperature to 
+/// fluid viscosity at wall temperature
+///
+/// Yang, X., Yang, X., Ding, J., Shao, Y., & Fan, H. (2012). 
+/// Numerical simulation study on the heat transfer 
+/// characteristics of the tube receiver of the 
+/// solar thermal power tower. Applied Energy, 90(1), 142-147.
+///
+/// viscosity_ratio = mu_f / mu_s
+///
+/// note that this ratio is a dynamic viscosity ratio, not 
+/// kinematic viscosity ratio
+///
+///
+/// The range of applicability (from Perry's Handbook)
+/// is 
+/// 0.7 < Pr < 16700
+/// and 
+/// 4000 < Re_D <10000
+///
+/// and 
+///
+/// 0.0044 < viscosity_ratio <  9.75
+/// 
+/// This is for fully developed turbulent flow only
+///
+/// viscosity_ratio = 5.0;
+///
+///
+/// ```rust
+///
+/// extern crate approx;
+/// use heat_transfer_rust::NusseltCorrelations::PipeCorrelations;
+///
+/// let Re = 8000_f64;
+/// let Pr = 17_f64;
+///
+/// // the viscosity ratio is assumed to be 5
+///
+/// let viscosity_ratio = 5.0_f64;
+///
+/// let nu_f_reference = 0.027 * Re.powf(0.8) 
+/// * Pr.powf(1.0/3.0) * 
+/// viscosity_ratio.powf(0.14);
+///
+/// let test_nu = PipeCorrelations::sieder_tate_correlation(
+/// Re, Pr, viscosity_ratio);
+///
+/// approx::assert_relative_eq!(nu_f_reference, test_nu, 
+/// max_relative=0.01);
+///
+/// ```
+///
 ///
 ///
 /// meant for turbulent flow
-pub fn sieder_tate_correlation(Re: f64, Pr: f64) -> f64 {
-    panic!("not implemented");
-    return 0.0;
+pub fn sieder_tate_correlation(Re: f64, Pr: f64, 
+                               viscosity_ratio_fluid_over_wall: f64) -> f64 {
+
+    if Pr < 0.7 {
+        panic!("Sieder Tate Pr < 0.7, too low");
+    }
+
+    if Pr > 16700_f64 {
+        panic!("Sieder Tate Pr > 16700, too high");
+    }
+
+    if Re < 4000_f64 {
+        panic!("Sieder Tate Re < 4000, laminar or transition");
+    }
+
+    if Re > 10000_f64 {
+        panic!("Sieder Tate Re > 10000, too high");
+    }
+
+    if viscosity_ratio_fluid_over_wall < 0.0044 {
+        panic!("Sieder Tate viscosity_ratio_fluid_over_wall < 4000, 
+               laminar or transition");
+    }
+
+    if viscosity_ratio_fluid_over_wall > 9.75 {
+        panic!("Sieder Tate viscosity_ratio_fluid_over_wall > 
+               10000, too high");
+    }
+
+    let Nu_f = 0.027 * Re.powf(0.8) * Pr.powf(0.33333333333) * 
+        viscosity_ratio_fluid_over_wall.powf(0.14);
+
+    return Nu_f;
 }
 
 /// Gnielinski Equation
