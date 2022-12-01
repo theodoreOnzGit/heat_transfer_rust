@@ -257,14 +257,71 @@ pub fn sieder_tate_correlation(Re: f64, Pr: f64,
     return Nu_f;
 }
 
-/// Gnielinski Equation
+/// Gnielinski Equation for liquids
 ///
 ///
 /// https://www.e3s-conferences.org/articles/e3sconf/pdf/2017/01/e3sconf_wtiue2017_02008.pdf
 ///
 /// turbulent flow, all kinds of tubes
 ///
-pub fn gnielinski_correlation(Re: f64, Pr: f64) -> f64 {
-    panic!("not implemented");
-    return 0.0;
+pub fn gnielinski_correlation_liquids(Re: f64, Pr_fluid: f64,
+                              Pr_wall: f64,
+                              darcy_friction_factor: f64) -> f64 {
+
+    if Pr_fluid < 0.5 {
+        panic!("gnielinski Pr_fluid < 0.5, too low");
+    }
+
+    if Pr_fluid > 1e5_f64 {
+        panic!("gnielinski Pr_fluid > 1e5, too high");
+    }
+
+    if Pr_wall < 0.5 {
+        panic!("gnielinski Pr_wall < 0.5, too low");
+    }
+
+    if Pr_wall > 1e5_f64 {
+        panic!("gnielinski Pr_wall > 1e5, too high");
+    }
+
+    let prandtl_ratio: f64 = Pr_fluid/Pr_wall;
+
+    if prandtl_ratio < 0.05 {
+        panic!("gnielinski prandtl_ratio < 0.05, too low");
+    }
+
+    if prandtl_ratio > 20_f64 {
+        panic!("gnielinski prandtl_ratio > 20, too high");
+    }
+
+    if Re < 2300_f64 {
+        panic!("gnielinski Re < 2300, laminar or transition");
+    }
+
+    if Re > 1e6_f64 {
+        panic!("gnielinski Re > 1e6, too high");
+    }
+
+    // now we start calculating
+    let darcy_ratio: f64 = darcy_friction_factor/8.0;
+
+    let numerator: f64 = darcy_ratio * (Re - 1000_f64) * Pr_fluid *
+        prandtl_ratio.powf(0.11);
+    let denominator:f64 = 1_f64 + 12.7_f64 * darcy_ratio.powf(0.5) *
+        (Pr_fluid.powf(0.666667) - 1.0);
+
+    let fluid_nusselt_number = numerator/denominator;
+    
+
+    return fluid_nusselt_number;
 }
+
+
+
+
+
+
+
+
+
+
