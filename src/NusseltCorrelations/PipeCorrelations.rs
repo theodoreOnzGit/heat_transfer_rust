@@ -184,6 +184,11 @@ pub fn dittus_boelter_correlation(Re: f64, Pr: f64,
 /// and 
 ///
 /// 0.0044 < viscosity_ratio <  9.75
+///
+/// The viscosity ratio bounds are estimated from the 
+/// the seider tate laminar heat transfer correlation,
+/// i assumed they are of the same bounds. Did not check
+/// however.
 /// 
 /// This is for fully developed turbulent flow only
 ///
