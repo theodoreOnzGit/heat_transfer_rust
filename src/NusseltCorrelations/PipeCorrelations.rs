@@ -71,11 +71,71 @@ pub fn nusselt_ciet_heater_v1_0(Re: f64)-> f64 {
 ///
 /// http://herve.lemonnier.sci.free.fr/TPF/NE/Winterton.pdf
 ///
+/// The original paper is here
+///
+/// Dittus, F. W., & Boelter, L. M. K. (1985). Heat transfer in 
+/// automobile radiators of the tubular type. International 
+/// communications in heat and mass transfer, 12(1), 3-22.
+///
+/// The Dittus Boelter correlation has two forms,
+/// one for heating and one for cooling
+///
+/// By heating I mean that the fluid is heated
+/// and heat is transfered from the tube walls to the 
+/// heater
+///
+/// And by cooling I mean that the fluid is cooled
+/// and the wall takes heat from the fluid
+///
+/// ```rust
+/// extern crate approx;
+/// use heat_transfer_rust::NusseltCorrelations::PipeCorrelations;
+///
+/// // here we have an example for heating
+/// // Re = 10000, Pr = 17
+///
+///
+/// let Re = 10000_f64;
+/// let Pr = 17_f64;
+///
+/// let heating_ref_nu = 0.023 * Re.powf(0.8) * Pr.powf(0.4);
+///
+/// let heating_test_bool = true;
+///
+/// let mut test_Nu = PipeCorrelations::dittus_boelter_correlation(Re, Pr,
+/// heating_test_bool);
+///
+/// approx::assert_relative_eq!(heating_ref_nu, test_Nu, 
+/// max_relative=0.01);
+///
+/// // here we have an example for cooling
+/// // Re = 10000, Pr = 17
+///
+/// let cooling_ref_nu = 0.023 * Re.powf(0.8) * Pr.powf(0.3);
+///
+/// let cooling_test_bool = false;
+///
+/// test_Nu = PipeCorrelations::dittus_boelter_correlation(Re, Pr,
+/// cooling_test_bool);
+///
+/// approx::assert_relative_eq!(cooling_ref_nu, test_Nu, 
+/// max_relative=0.01);
+/// ```
+///
 /// 
 ///
-pub fn dittus_boelter_correlation(Re: f64, Pr: f64) -> f64 {
-    panic!("not implemented");
-    return 0.0;
+pub fn dittus_boelter_correlation(Re: f64, Pr: f64,
+                                  heating: bool) -> f64 {
+
+    if heating == true {
+        let Nu = 0.023 * Re.powf(0.8) * Pr.powf(0.4);
+        return Nu;
+    }
+    else {
+        let Nu = 0.023 * Re.powf(0.8) * Pr.powf(0.3);
+        return Nu;
+    }
+
 }
 
 /// Sieder Tate Relationship
