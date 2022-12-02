@@ -264,6 +264,41 @@ pub fn sieder_tate_correlation(Re: f64, Pr: f64,
 ///
 /// turbulent flow, all kinds of tubes
 ///
+/// However, flow should be fully developed
+///
+/// ```rust
+///
+/// extern crate approx;
+/// use heat_transfer_rust::NusseltCorrelations::PipeCorrelations;
+///
+/// let Re = 8000_f64;
+/// let Pr_fluid = 17_f64;
+/// let Pr_wall = 12_f64;
+/// let darcy_friction_factor = 0.005_f64;
+///
+/// // let's now calculate the nusslet number
+///
+/// let prandtl_ratio = Pr_fluid/Pr_wall;
+///
+/// let darcy_ratio: f64 = darcy_friction_factor/8.0;
+///
+/// let numerator: f64 = darcy_ratio * (Re - 1000_f64) * Pr_fluid *
+///     prandtl_ratio.powf(0.11);
+/// let denominator:f64 = 1_f64 + 12.7_f64 * darcy_ratio.powf(0.5) *
+///     (Pr_fluid.powf(2.0/3.0) - 1.0);
+/// 
+///
+///
+/// let nu_f_reference = numerator/denominator;
+///
+/// let test_nu = PipeCorrelations::gnielinski_correlation_liquids(
+/// Re,Pr_fluid, Pr_wall,darcy_friction_factor);
+/// ///
+/// approx::assert_relative_eq!(nu_f_reference, test_nu, 
+/// max_relative=0.01);
+///
+/// ```
+///
 pub fn gnielinski_correlation_liquids(Re: f64, Pr_fluid: f64,
                               Pr_wall: f64,
                               darcy_friction_factor: f64) -> f64 {
