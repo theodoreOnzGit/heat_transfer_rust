@@ -358,11 +358,16 @@ pub fn gnielinski_correlation_liquids(Re: f64, Pr_fluid: f64,
 ///
 /// https://www.e3s-conferences.org/articles/e3sconf/pdf/2017/01/e3sconf_wtiue2017_02008.pdf
 ///
-/// transition and turbulent flow, all kinds of tubes
+/// The original Gnielinski equation does not have a smooth transition with
+/// the laminar region. In the following paper, an interpolation scheme
+/// is proposed by gnielinski:
 ///
 /// Gnielinski, V. (2013). On heat transfer 
 /// in tubes. International Journal of Heat and 
 /// Mass Transfer, 63, 134-140.
+///
+/// 
+///
 ///
 /// However, 
 ///
@@ -439,13 +444,6 @@ pub fn improved_gnielinski_correlation_liquids(Re: f64, Pr_fluid: f64,
         panic!("gnielinski prandtl_ratio > 20, too high");
     }
 
-    if Re < 2300_f64 {
-        panic!("gnielinski Re < 2300, laminar or transition");
-    }
-
-    if Re > 1e6_f64 {
-        panic!("gnielinski Re > 1e6, too high");
-    }
 
     // now we start calculating
     let darcy_ratio: f64 = darcy_friction_factor/8.0;
