@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+
 /// A nusselt correlation for CIET heater v1.0
 ///
 /// it returns Nu = 8.0 
@@ -352,7 +353,114 @@ pub fn gnielinski_correlation_liquids(Re: f64, Pr_fluid: f64,
 }
 
 
+/// Improved Gnielinski Equation for liquids
+///
+///
+/// https://www.e3s-conferences.org/articles/e3sconf/pdf/2017/01/e3sconf_wtiue2017_02008.pdf
+///
+/// transition and turbulent flow, all kinds of tubes
+///
+/// Gnielinski, V. (2013). On heat transfer 
+/// in tubes. International Journal of Heat and 
+/// Mass Transfer, 63, 134-140.
+///
+/// However, 
+///
+/// ```rust
+///
+/// extern crate approx;
+/// use heat_transfer_rust::NusseltCorrelations::PipeCorrelations;
+///
+/// let Re = 8000_f64;
+/// let Pr_fluid = 17_f64;
+/// let Pr_wall = 12_f64;
+/// let darcy_friction_factor = 0.005_f64;
+///
+/// // let's now calculate the nusslet number
+///
+/// let prandtl_ratio = Pr_fluid/Pr_wall;
+///
+/// let darcy_ratio: f64 = darcy_friction_factor/8.0;
+///
+/// let numerator: f64 = darcy_ratio * (Re - 1000_f64) * Pr_fluid *
+///     prandtl_ratio.powf(0.11);
+/// let denominator:f64 = 1_f64 + 12.7_f64 * darcy_ratio.powf(0.5) *
+///     (Pr_fluid.powf(2.0/3.0) - 1.0);
+/// 
+///
+///
+/// let nu_f_reference = numerator/denominator;
+///
+/// let test_nu = PipeCorrelations::gnielinski_correlation_liquids(
+/// Re,Pr_fluid, Pr_wall,darcy_friction_factor);
+/// ///
+/// approx::assert_relative_eq!(nu_f_reference, test_nu, 
+/// max_relative=0.01);
+///
+/// // now i want to test the nusselt number bordering the laminar
+/// // region
+///
+/// let Re_laminar = 2300_f64;
+///
+/// let test_nu2 = PipeCorrelations::gnielinski_correlation_liquids(
+/// Re_laminar,Pr_fluid, Pr_wall,darcy_friction_factor);
+///
+/// approx::assert_relative_eq!(0.0, test_nu2, 
+/// max_relative=0.01);
+/// ```
+///
+pub fn improved_gnielinski_correlation_liquids(Re: f64, Pr_fluid: f64,
+                              Pr_wall: f64,
+                              darcy_friction_factor: f64) -> f64 {
 
+    if Pr_fluid < 0.5 {
+        panic!("gnielinski Pr_fluid < 0.5, too low");
+    }
+
+    if Pr_fluid > 1e5_f64 {
+        panic!("gnielinski Pr_fluid > 1e5, too high");
+    }
+
+    if Pr_wall < 0.5 {
+        panic!("gnielinski Pr_wall < 0.5, too low");
+    }
+
+    if Pr_wall > 1e5_f64 {
+        panic!("gnielinski Pr_wall > 1e5, too high");
+    }
+
+    let prandtl_ratio: f64 = Pr_fluid/Pr_wall;
+
+    if prandtl_ratio < 0.05 {
+        panic!("gnielinski prandtl_ratio < 0.05, too low");
+    }
+
+    if prandtl_ratio > 20_f64 {
+        panic!("gnielinski prandtl_ratio > 20, too high");
+    }
+
+    if Re < 2300_f64 {
+        panic!("gnielinski Re < 2300, laminar or transition");
+    }
+
+    if Re > 1e6_f64 {
+        panic!("gnielinski Re > 1e6, too high");
+    }
+
+    // now we start calculating
+    let darcy_ratio: f64 = darcy_friction_factor/8.0;
+
+    let numerator: f64 = darcy_ratio * (Re - 1000_f64) * Pr_fluid *
+        prandtl_ratio.powf(0.11);
+    let denominator:f64 = 1_f64 + 12.7_f64 * darcy_ratio.powf(0.5) *
+        (Pr_fluid.powf(0.666667) - 1.0);
+
+    let fluid_nusselt_number = numerator/denominator;
+    
+    panic!("not implemented");
+
+    return fluid_nusselt_number;
+}
 
 
 
