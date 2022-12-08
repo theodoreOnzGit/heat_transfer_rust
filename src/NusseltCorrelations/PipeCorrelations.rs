@@ -492,6 +492,40 @@ pub fn laminar_nusselt_uniform_wall_temperature_fully_developed(
 /// Re, Pr is measured at bulk temp
 /// T_bulk = (T_in + T_out)/2
 ///
+/// for fully developed flow, we need L/D to be about 20 or more
+///
+/// in Gnielinsiki's paper, when we have Pr = 0.7, we then have
+/// and L/D about 1000, or D/L  = 0.001, then we can have
+/// Nusselt number almost 3.66
+///
+/// For higher Prandtl numbers, the tendancy is for Nusselt numbers
+/// to increase more especially due to influence of developing flow.
+///
+///
+/// ```rust
+///
+/// extern crate approx;
+/// use heat_transfer_rust::NusseltCorrelations::PipeCorrelations;
+///
+/// let nu_reference = 3.66_f64;
+/// let Re = 1000_f64;
+/// let Pr = 0.7_f64;
+/// let lengthToDiameterRatio = 1000_f64;
+///
+/// let nu_test = PipeCorrelations::laminar_nusselt_uniform_wall_temperature_developing(
+/// Re,
+/// Pr,
+/// lengthToDiameterRatio);
+///
+///
+///
+/// approx::assert_relative_eq!(nu_reference, nu_test, 
+/// max_relative=0.01);
+///
+///
+///
+///
+/// ```
 ///
 ///
 ///
