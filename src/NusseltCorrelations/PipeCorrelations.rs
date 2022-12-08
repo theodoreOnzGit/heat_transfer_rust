@@ -796,3 +796,117 @@ pub fn laminar_nusselt_uniform_heat_flux_developing(
 }
 
 
+/// estimates Nusselt Number for developing flow 
+/// in turbulent regime (Re > 4000)
+/// for tubes
+/// regardless of boundary conditions
+///
+///
+/// Re, Pr_fluid is measured at bulk temp
+/// T_bulk = (T_in + T_out)/2
+///
+/// Pr_wall is liquid Pr at wall temperature
+///
+/// using gnielinski's data, we can get a Nu of 16 
+/// at Pr_fluid = 0.7, Re = 5000
+/// Pr_wall = 0.7
+/// d/L = 0.0001 or
+/// L/D  = 10000
+///
+/// darcy friction factor at these conditions 
+/// Re = 5000, L/D = 10000 is calculated
+/// for smooth tubes
+///
+/// darcy_friction_factor = 1.8 * log10 (Re) - 1.5
+///
+/// ```rust
+///
+/// extern crate approx;
+/// extern crate fluid_mechanics_rust;
+/// use heat_transfer_rust::NusseltCorrelations::PipeCorrelations;
+///
+/// let mut nu_reference = 16_f64;
+///
+///
+/// // test 1
+///
+/// let mut Re = 5000_f64;
+/// let mut Pr = 0.7_f64;
+/// let mut Pr_wall = 0.7_f64;
+/// let mut lengthToDiameterRatio = 10000_f64;
+///
+/// let mut darcy_friction_factor :f64 = 
+/// fluid_mechanics_rust::darcy(Re, 0.0);
+///
+/// let mut nu_test = PipeCorrelations::gnielinski_correlation_liquids_developing(
+/// Re,
+/// Pr,
+/// Pr_wall,
+/// darcy_friction_factor,
+/// lengthToDiameterRatio);
+///
+///
+///
+/// approx::assert_relative_eq!(nu_reference, nu_test, 
+/// max_relative=0.02);
+/// ```
+///
+pub fn gnielinski_correlation_liquids_developing(
+    Re: f64, Pr_fluid: f64, 
+    Pr_wall: f64,
+    darcy_friction_factor: f64,
+    lengthToDiameterRatio: f64) -> f64 {
+
+    if Re < 4000_f64 {
+        panic!("laminar or transition Re < 4000");
+    }
+
+
+    if Pr_fluid < 0.46_f64 {
+        panic!("gnielinski_correlation_liquids_developing \n
+               error Pr_fluid < 0.46, out of experimental data range");
+    }
+
+    if Pr_wall < 0.46_f64 {
+        panic!("gnielinski_correlation_liquids_developing \n
+               error Pr_wall < 0.46, out of experimental data range");
+    }
+
+    if Pr_fluid > 346_f64 {
+        panic!("gnielinski_correlation_liquids_developing \n
+               error Pr_fluid > 346, out of experimental data range");
+    }
+
+    if Pr_wall > 346_f64 {
+        panic!("gnielinski_correlation_liquids_developing \n
+               error Pr_wall > 346, out of experimental data range");
+    }
+
+    if lengthToDiameterRatio <= 0_f64 {
+        panic!("gnielinski_correlation_liquids_developing \n
+               error lengthToDiameterRatio < 0");
+    }
+
+
+    let prandtl_ratio: f64 = Pr_fluid/Pr_wall;
+
+    let entrance_region_correction: f64 = 
+        1.0 + lengthToDiameterRatio.powf(-0.6666666667);
+
+    // now we start calculating
+    let darcy_ratio: f64 = darcy_friction_factor/8.0;
+
+    let numerator: f64 = darcy_ratio * (Re - 1000_f64) * Pr_fluid *
+        prandtl_ratio.powf(0.11);
+    let denominator:f64 = 1_f64 + 12.7_f64 * darcy_ratio.powf(0.5) *
+        (Pr_fluid.powf(0.666667) - 1.0);
+
+    let fluid_nusselt_number = numerator/denominator*
+        entrance_region_correction;
+    
+
+    return fluid_nusselt_number;
+
+}
+        
+

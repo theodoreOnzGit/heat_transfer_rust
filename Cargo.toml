@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 approx = "0.5.1"
+fluid_mechanics_rust = { git = "https://github.com/theodoreOnzGit/fluid_mechanics_rust", version = "0.1.0" }
