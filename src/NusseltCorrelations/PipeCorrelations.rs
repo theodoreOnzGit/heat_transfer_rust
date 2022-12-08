@@ -870,9 +870,9 @@ pub fn gnielinski_correlation_liquids_developing(
 /// extern crate fluid_mechanics_rust;
 /// use heat_transfer_rust::NusseltCorrelations::PipeCorrelations;
 ///
-/// let mut nu_reference = 8.2_f64;
-/// // test 1
+/// // test 1 (transition region)
 ///
+/// let mut nu_reference = 8.2_f64;
 /// let mut Re = 3000_f64;
 /// let mut Pr = 0.7_f64;
 /// let mut Pr_wall = 0.7_f64;
@@ -895,6 +895,56 @@ pub fn gnielinski_correlation_liquids_developing(
 /// approx::assert_relative_eq!(nu_reference, nu_test, 
 /// max_relative=0.02);
 ///
+///
+/// // test 2 (turbulent regime)
+///
+/// let mut nu_reference = 16_f64;
+/// let mut Re = 5000_f64;
+/// let mut Pr = 0.7_f64;
+/// let mut Pr_wall = 0.7_f64;
+/// let mut lengthToDiameterRatio = 10000_f64;
+///
+/// let mut darcy_friction_factor :f64 = 
+/// fluid_mechanics_rust::darcy(Re, 0.0);
+///
+/// let mut nu_test =
+/// PipeCorrelations::
+/// gnielinski_correlation_interpolated_uniform_heat_flux_liquids_developing(
+/// Re,
+/// Pr,
+/// Pr_wall,
+/// darcy_friction_factor,
+/// lengthToDiameterRatio);
+///
+///
+///
+/// approx::assert_relative_eq!(nu_reference, nu_test, 
+/// max_relative=0.02);
+///
+/// // test 3 (laminar regime)
+///
+/// let mut nu_reference = 4.36;
+/// let mut Re = 1000_f64;
+/// let mut Pr = 0.7_f64;
+/// let mut Pr_wall = 0.7_f64;
+/// let mut lengthToDiameterRatio = 10000_f64;
+///
+/// let mut darcy_friction_factor :f64 = 
+/// fluid_mechanics_rust::darcy(Re, 0.0);
+///
+/// let mut nu_test =
+/// PipeCorrelations::
+/// gnielinski_correlation_interpolated_uniform_heat_flux_liquids_developing(
+/// Re,
+/// Pr,
+/// Pr_wall,
+/// darcy_friction_factor,
+/// lengthToDiameterRatio);
+///
+///
+///
+/// approx::assert_relative_eq!(nu_reference, nu_test, 
+/// max_relative=0.02);
 /// ```
 pub fn gnielinski_correlation_interpolated_uniform_heat_flux_liquids_developing(
     Re: f64, Pr_fluid: f64, 
