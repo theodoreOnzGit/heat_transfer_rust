@@ -460,7 +460,67 @@ pub fn improved_gnielinski_correlation_liquids(Re: f64, Pr_fluid: f64,
     return fluid_nusselt_number;
 }
 
+/// returns a nusselt number of 4.36,
+///
+/// This is an estimate for constant heat flux nusselt number
+/// for fully developed thermal and velocity boundary layers
+/// 
+///
+/// ```rust
+/// extern crate approx;
+/// use heat_transfer_rust::NusseltCorrelations::PipeCorrelations;
+///
+/// let nu_reference = 4.36_f64;
+/// let Re = 1800_f64;
+/// let nu_test = PipeCorrelations::laminar_nusselt_uniform_heat_flux_fully_developed(
+/// Re);
+///
+///
+/// approx::assert_relative_eq!(nu_reference, nu_test, 
+/// max_relative=0.01);
+///
+///
+///
+/// ```
+pub fn laminar_nusselt_uniform_heat_flux_fully_developed(
+    Re: f64) -> f64 {
+    if Re > 2300_f64 {
+        panic!("turbulent Re > 2300");
+    }
 
+    return 4.36;
+}
+
+/// returns a nusselt number of 3.66,
+///
+/// This is an estimate for constant wall temperature nusselt number
+/// for fully developed thermal and velocity boundary layers
+/// 
+///
+/// ```rust
+/// extern crate approx;
+/// use heat_transfer_rust::NusseltCorrelations::PipeCorrelations;
+///
+/// let nu_reference = 3.66_f64;
+/// let Re = 1800_f64;
+/// let nu_test = PipeCorrelations::laminar_nusselt_uniform_wall_temperature_fully_developed(
+/// Re);
+///
+///
+/// approx::assert_relative_eq!(nu_reference, nu_test, 
+/// max_relative=0.01);
+///
+///
+///
+/// ```
+pub fn laminar_nusselt_uniform_wall_temperature_fully_developed(
+    Re: f64) -> f64 {
+    if Re > 2300_f64 {
+        panic!("turbulent Re > 2300");
+    }
+
+    return 3.66;
+}
 
 
 
