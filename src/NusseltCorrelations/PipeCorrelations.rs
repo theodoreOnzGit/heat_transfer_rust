@@ -549,8 +549,34 @@ pub fn laminar_nusselt_uniform_wall_temperature_fully_developed(
 ///
 pub fn laminar_nusselt_uniform_wall_temperature_developing(
     Re: f64, Pr: f64, lengthToDiameterRatio: f64) -> f64 {
+
+
     if Re > 2300_f64 {
-        panic!("turbulent Re > 2300");
+        panic!("
+               laminar_nusselt_uniform_wall_temperature_developing 
+               error 
+               turbulent Re > 2300");
+    }
+
+    if Re == 0_f64 {
+        // if Re = 0, no flow, 
+        // we should have Nu = 1, which is as good as conduction
+        return 1.0;
+    }
+
+    if Re < 0_f64 {
+        panic!("laminar_nusselt_uniform_wall_temperature_developing 
+               error Re < 0");
+    }
+
+    if Pr < 0_f64 {
+        panic!("laminar_nusselt_uniform_wall_temperature_developing 
+               error Pr < 0");
+    }
+
+    if lengthToDiameterRatio <= 0_f64 {
+        panic!("laminar_nusselt_uniform_wall_temperature_developing 
+               error lengthToDiameterRatio < 0");
     }
 
     let diameterToLengthRatio = lengthToDiameterRatio.powf(-1.0);
