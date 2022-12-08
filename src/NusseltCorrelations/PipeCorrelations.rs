@@ -353,72 +353,6 @@ pub fn gnielinski_correlation_liquids_fully_developed(Re: f64, Pr_fluid: f64,
 }
 
 
-/// Improved Gnielinski Equation for liquids
-///
-///
-/// https://www.e3s-conferences.org/articles/e3sconf/pdf/2017/01/e3sconf_wtiue2017_02008.pdf
-///
-/// The original Gnielinski equation does not have a smooth transition with
-/// the laminar region. In the following paper, an interpolation scheme
-/// is proposed by gnielinski:
-///
-/// Gnielinski, V. (2013). On heat transfer 
-/// in tubes. International Journal of Heat and 
-/// Mass Transfer, 63, 134-140.
-///
-/// 
-///
-///
-/// However, 
-///
-/// ```rust
-/// ```
-///
-pub fn improved_gnielinski_correlation_liquids(Re: f64, Pr_fluid: f64,
-                              Pr_wall: f64,
-                              darcy_friction_factor: f64) -> f64 {
-
-    if Pr_fluid < 0.5 {
-        panic!("gnielinski Pr_fluid < 0.5, too low");
-    }
-
-    if Pr_fluid > 1e5_f64 {
-        panic!("gnielinski Pr_fluid > 1e5, too high");
-    }
-
-    if Pr_wall < 0.5 {
-        panic!("gnielinski Pr_wall < 0.5, too low");
-    }
-
-    if Pr_wall > 1e5_f64 {
-        panic!("gnielinski Pr_wall > 1e5, too high");
-    }
-
-    let prandtl_ratio: f64 = Pr_fluid/Pr_wall;
-
-    if prandtl_ratio < 0.05 {
-        panic!("gnielinski prandtl_ratio < 0.05, too low");
-    }
-
-    if prandtl_ratio > 20_f64 {
-        panic!("gnielinski prandtl_ratio > 20, too high");
-    }
-
-
-    // now we start calculating
-    let darcy_ratio: f64 = darcy_friction_factor/8.0;
-
-    let numerator: f64 = darcy_ratio * (Re - 1000_f64) * Pr_fluid *
-        prandtl_ratio.powf(0.11);
-    let denominator:f64 = 1_f64 + 12.7_f64 * darcy_ratio.powf(0.5) *
-        (Pr_fluid.powf(0.666667) - 1.0);
-
-    let fluid_nusselt_number = numerator/denominator;
-    
-    panic!("not implemented");
-
-    return fluid_nusselt_number;
-}
 
 /// returns a nusselt number of 4.36,
 ///
@@ -909,4 +843,145 @@ pub fn gnielinski_correlation_liquids_developing(
 
 }
         
+
+
+/// Gnielinski correlation for developing
+/// flow regimes (both thermally and hydrodynamically)
+/// for pipe flows with liquids
+///
+/// and for turbulent, developing and lamianr regimes
+/// uses uniform heat flux correlations in laminar regime
+///
+/// Gnielinski, V. (2013). On heat 
+/// transfer in tubes. International Journal 
+/// of Heat and Mass Transfer, 63, 134-140.
+///
+/// The reference test data is as follows:
+/// at Pr_fluid = 0.7, Pr_wall = 0.7
+/// Re = 3000,
+///
+/// d/L = 0.0001 (L/D = 10000)
+/// Nu is approximately 8.2
+///
+///
+/// ```rust
+///
+/// extern crate approx;
+/// extern crate fluid_mechanics_rust;
+/// use heat_transfer_rust::NusseltCorrelations::PipeCorrelations;
+///
+/// let mut nu_reference = 8.2_f64;
+/// // test 1
+///
+/// let mut Re = 3000_f64;
+/// let mut Pr = 0.7_f64;
+/// let mut Pr_wall = 0.7_f64;
+/// let mut lengthToDiameterRatio = 10000_f64;
+///
+/// let mut darcy_friction_factor :f64 = 
+/// fluid_mechanics_rust::darcy(Re, 0.0);
+///
+/// let mut nu_test =
+/// PipeCorrelations::
+/// gnielinski_correlation_interpolated_uniform_heat_flux_liquids_developing(
+/// Re,
+/// Pr,
+/// Pr_wall,
+/// darcy_friction_factor,
+/// lengthToDiameterRatio);
+///
+///
+///
+/// approx::assert_relative_eq!(nu_reference, nu_test, 
+/// max_relative=0.02);
+///
+/// ```
+pub fn gnielinski_correlation_interpolated_uniform_heat_flux_liquids_developing(
+    Re: f64, Pr_fluid: f64, 
+    Pr_wall: f64,
+    darcy_friction_factor: f64,
+    lengthToDiameterRatio: f64) -> f64 {
+
+
+
+    if Pr_fluid < 0.46_f64 {
+        panic!("gnielinski_correlation_liquids_developing \n
+               error Pr_fluid < 0.46, out of experimental data range");
+    }
+
+    if Pr_wall < 0.46_f64 {
+        panic!("gnielinski_correlation_liquids_developing \n
+               error Pr_wall < 0.46, out of experimental data range");
+    }
+
+    if Pr_fluid > 346_f64 {
+        panic!("gnielinski_correlation_liquids_developing \n
+               error Pr_fluid > 346, out of experimental data range");
+    }
+
+    if Pr_wall > 346_f64 {
+        panic!("gnielinski_correlation_liquids_developing \n
+               error Pr_wall > 346, out of experimental data range");
+    }
+
+    if lengthToDiameterRatio <= 0_f64 {
+        panic!("gnielinski_correlation_liquids_developing \n
+               error lengthToDiameterRatio < 0");
+    }
+
+    // if this is turbulent flow, use the
+    // turbulent correlation
+    if Re > 4000_f64 {
+        let fluid_nusselt_number = 
+            gnielinski_correlation_liquids_developing(
+                Re, 
+                Pr_fluid, 
+                Pr_wall, 
+                darcy_friction_factor, 
+                lengthToDiameterRatio);
+
+        return fluid_nusselt_number;
+    }
+
+    // if this is laminar flow, 
+    // use laminar flow correlation for uniform heat flux
+    if Re < 2300_f64 {
+        let fluid_nusselt_number = 
+            laminar_nusselt_uniform_heat_flux_developing(
+                Re, 
+                Pr_fluid, 
+                lengthToDiameterRatio);
+
+        return fluid_nusselt_number;
+    }
+
+    // if in transition region, then interpolate
+
+    let laminar_nusselt = 
+            laminar_nusselt_uniform_heat_flux_developing(
+                2300_f64, 
+                Pr_fluid, 
+                lengthToDiameterRatio);
+
+    let turbulent_nusselt = 
+        gnielinski_correlation_liquids_developing(
+            4000_f64, 
+            Pr_fluid, 
+            Pr_wall, 
+            darcy_friction_factor, 
+            lengthToDiameterRatio);
+
+
+    // the interpolation factor is known as gamma
+    // in gnielinski's paper
+    let gamma = (Re - 2300_f64)/(4000_f64 - 2300_f64);
+
+    let fluid_nusselt_number = 
+        (1_f64 - gamma) * laminar_nusselt +
+        gamma * turbulent_nusselt;
+    
+    return fluid_nusselt_number;
+
+
+}
 
