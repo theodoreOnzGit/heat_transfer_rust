@@ -501,18 +501,23 @@ pub fn laminar_nusselt_uniform_wall_temperature_fully_developed(
 /// For higher Prandtl numbers, the tendancy is for Nusselt numbers
 /// to increase more especially due to influence of developing flow.
 ///
+/// The second test case is for Pr about 70, which is the other extreme
+/// case. From Gnielinski's paper, Nusselt number is about
+/// 8.0 for Re = 2000 and d/L = 0.001
+///
+///
 ///
 /// ```rust
 ///
 /// extern crate approx;
 /// use heat_transfer_rust::NusseltCorrelations::PipeCorrelations;
 ///
-/// let nu_reference = 3.66_f64;
-/// let Re = 1000_f64;
-/// let Pr = 0.7_f64;
+/// let mut nu_reference = 3.66_f64;
+/// let mut Re = 1000_f64;
+/// let mut Pr = 0.7_f64;
 /// let lengthToDiameterRatio = 1000_f64;
 ///
-/// let nu_test = PipeCorrelations::laminar_nusselt_uniform_wall_temperature_developing(
+/// let mut nu_test = PipeCorrelations::laminar_nusselt_uniform_wall_temperature_developing(
 /// Re,
 /// Pr,
 /// lengthToDiameterRatio);
@@ -521,9 +526,21 @@ pub fn laminar_nusselt_uniform_wall_temperature_fully_developed(
 ///
 /// approx::assert_relative_eq!(nu_reference, nu_test, 
 /// max_relative=0.01);
+/// 
+/// // this is the second part of the test
+///
+/// nu_reference = 8_f64;
+/// Re = 2000_f64;
+/// Pr = 70_f64;
+///
+/// nu_test = PipeCorrelations::laminar_nusselt_uniform_wall_temperature_developing(
+/// Re,
+/// Pr,
+/// lengthToDiameterRatio);
 ///
 ///
-///
+/// approx::assert_relative_eq!(nu_reference, nu_test, 
+/// max_relative=0.05);
 ///
 /// ```
 ///
