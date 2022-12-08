@@ -292,7 +292,7 @@ pub fn sieder_tate_correlation(Re: f64, Pr: f64,
 ///
 /// let nu_f_reference = numerator/denominator;
 ///
-/// let test_nu = PipeCorrelations::gnielinski_correlation_liquids(
+/// let test_nu = PipeCorrelations::gnielinski_correlation_liquids_fully_developed(
 /// Re,Pr_fluid, Pr_wall,darcy_friction_factor);
 /// ///
 /// approx::assert_relative_eq!(nu_f_reference, test_nu, 
@@ -300,7 +300,7 @@ pub fn sieder_tate_correlation(Re: f64, Pr: f64,
 ///
 /// ```
 ///
-pub fn gnielinski_correlation_liquids(Re: f64, Pr_fluid: f64,
+pub fn gnielinski_correlation_liquids_fully_developed(Re: f64, Pr_fluid: f64,
                               Pr_wall: f64,
                               darcy_friction_factor: f64) -> f64 {
 
@@ -372,46 +372,6 @@ pub fn gnielinski_correlation_liquids(Re: f64, Pr_fluid: f64,
 /// However, 
 ///
 /// ```rust
-///
-/// extern crate approx;
-/// use heat_transfer_rust::NusseltCorrelations::PipeCorrelations;
-///
-/// let Re = 8000_f64;
-/// let Pr_fluid = 17_f64;
-/// let Pr_wall = 12_f64;
-/// let darcy_friction_factor = 0.005_f64;
-///
-/// // let's now calculate the nusslet number
-///
-/// let prandtl_ratio = Pr_fluid/Pr_wall;
-///
-/// let darcy_ratio: f64 = darcy_friction_factor/8.0;
-///
-/// let numerator: f64 = darcy_ratio * (Re - 1000_f64) * Pr_fluid *
-///     prandtl_ratio.powf(0.11);
-/// let denominator:f64 = 1_f64 + 12.7_f64 * darcy_ratio.powf(0.5) *
-///     (Pr_fluid.powf(2.0/3.0) - 1.0);
-/// 
-///
-///
-/// let nu_f_reference = numerator/denominator;
-///
-/// let test_nu = PipeCorrelations::gnielinski_correlation_liquids(
-/// Re,Pr_fluid, Pr_wall,darcy_friction_factor);
-/// ///
-/// approx::assert_relative_eq!(nu_f_reference, test_nu, 
-/// max_relative=0.01);
-///
-/// // now i want to test the nusselt number bordering the laminar
-/// // region
-///
-/// let Re_laminar = 2300_f64;
-///
-/// let test_nu2 = PipeCorrelations::gnielinski_correlation_liquids(
-/// Re_laminar,Pr_fluid, Pr_wall,darcy_friction_factor);
-///
-/// approx::assert_relative_eq!(0.0, test_nu2, 
-/// max_relative=0.01);
 /// ```
 ///
 pub fn improved_gnielinski_correlation_liquids(Re: f64, Pr_fluid: f64,
@@ -496,6 +456,8 @@ pub fn laminar_nusselt_uniform_heat_flux_fully_developed(
 /// This is an estimate for constant wall temperature nusselt number
 /// for fully developed thermal and velocity boundary layers
 /// 
+/// Re is measured at bulk temp
+/// T_bulk = (T_in + T_out)/2
 ///
 /// ```rust
 /// extern crate approx;
@@ -522,7 +484,79 @@ pub fn laminar_nusselt_uniform_wall_temperature_fully_developed(
     return 3.66;
 }
 
+/// estimates Nusselt Number for developing flow 
+/// in laminar regime
+/// for tubes
+/// constant wall temperature
+///
+/// Re, Pr is measured at bulk temp
+/// T_bulk = (T_in + T_out)/2
+///
+///
+///
+///
+///
+pub fn laminar_nusselt_uniform_wall_temperature_developing(
+    Re: f64, Pr: f64, lengthToDiameterRatio: f64) -> f64 {
+    if Re > 2300_f64 {
+        panic!("turbulent Re > 2300");
+    }
+
+    let diameterToLengthRatio = lengthToDiameterRatio.powf(-1.0);
+
+    let term_1 :f64 = 3.66;
+    let term_2 :f64 = 1.615 * (Re * Pr * diameterToLengthRatio).
+        powf(0.3333333333) - 0.7;
+
+    let term_3 :f64 = (Re * Pr * diameterToLengthRatio).powf(0.5) *
+        (2.0/(1.0 + 22.0 * Pr)).powf(0.166666666666666667);
 
 
+    let nusselt_number = (term_1.powf(3.0) +
+                          0.7_f64.powf(3.0) +
+                          term_2.powf(3.0) +
+                          term_3.powf(3.0)).powf(0.33333333333333);
+
+
+    return nusselt_number;
+}
+
+
+/// estimates Nusselt Number for developing flow 
+/// in laminar regime
+/// for tubes
+/// constant heat flux
+///
+/// Re, Pr is measured at bulk temp
+/// T_bulk = (T_in + T_out)/2
+///
+///
+///
+///
+///
+pub fn laminar_nusselt_uniform_heat_flux_developing(
+    Re: f64, Pr: f64, lengthToDiameterRatio: f64) -> f64 {
+    if Re > 2300_f64 {
+        panic!("turbulent Re > 2300");
+    }
+
+    let diameterToLengthRatio = lengthToDiameterRatio.powf(-1.0);
+
+    let term_1 :f64 = 4.354;
+    let term_2 :f64 = 1.953 * (Re * Pr * diameterToLengthRatio).
+        powf(0.3333333333) - 0.6;
+
+    let term_3 :f64 = 0.924 * (Re * Pr * diameterToLengthRatio).powf(0.5) *
+        (Pr).powf(-0.166666666666666667);
+
+
+    let nusselt_number = (term_1.powf(3.0) +
+                          0.6_f64.powf(3.0) +
+                          term_2.powf(3.0) +
+                          term_3.powf(3.0)).powf(0.33333333333333);
+
+
+    return nusselt_number;
+}
 
 
