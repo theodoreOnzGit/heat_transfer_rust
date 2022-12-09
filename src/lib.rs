@@ -2,6 +2,7 @@
 
 
 pub mod NusseltCorrelations;
+pub mod ControlVolumeCalculations;
 
 
 pub fn add(left: usize, right: usize) -> usize {
