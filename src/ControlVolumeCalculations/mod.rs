@@ -38,31 +38,21 @@
 
 extern crate uom;
 use uom::si::f64::*;
+
+/// This module contains functions which help to calculate
+/// the enthalpy explicitly, ie using enthalpy in and out for current
+/// timestep
+///
+/// The known information from which to start is 
+/// (1) the mass flow rate
+/// (2) the temperatures of each part of the fluid
+/// (3) mass of the control volume
+#[allow(non_snake_case)]
 pub mod ExplictCalculations;
 
-/// This function calculates the formula:
-/// H_cv (t+1)  = dt * (H_in - H_out + Q_s + W_s) + H_cv (t)
-///
-/// It is up to user discretion whether to use the enthalpy
-/// in and out of the system and work done on the system
-/// as well as heat supplied at current timestep or next timestep
-///
-pub fn get_control_volume_enthalpy_next_timestep(
-    timestep: Time,
-    enthalpy_out: Power,
-    enthalpy_in: Power,
-    heat_supplied_to_system: Power,
-    work_done_on_system: Power,
-    control_volume_enthalpy_current_timestep: Energy,
-    ) -> Energy {
 
-    let control_volume_enthalpy_next_timestep: Energy 
-        = timestep * (enthalpy_in - 
-                      enthalpy_out +
-                      heat_supplied_to_system +
-                      work_done_on_system) 
-        + control_volume_enthalpy_current_timestep;
+/// This module contains commonly used functions for Explicit and
+/// Implicit timestep calculations
+#[allow(non_snake_case)]
+pub mod CommonFunctions;
 
-    return control_volume_enthalpy_next_timestep;
-
-}
