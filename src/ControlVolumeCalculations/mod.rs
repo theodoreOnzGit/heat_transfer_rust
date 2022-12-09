@@ -40,6 +40,13 @@ extern crate uom;
 use uom::si::f64::*;
 pub mod ExplictCalculations;
 
+/// This function calculates the formula:
+/// H_cv (t+1)  = dt * (H_in - H_out + Q_s + W_s) + H_cv (t)
+///
+/// It is up to user discretion whether to use the enthalpy
+/// in and out of the system and work done on the system
+/// as well as heat supplied at current timestep or next timestep
+///
 pub fn get_control_volume_enthalpy_next_timestep(
     timestep: Time,
     enthalpy_out: Power,
