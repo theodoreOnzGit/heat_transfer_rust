@@ -76,7 +76,16 @@ pub fn calculate_convection_heat_flux_power_input(
 
 /// calculate overall heat flux power input
 ///
-/// Q = U (T_surrounding - T_fluid) A
+/// assuming a fixed surrounding temperature
+///
+/// Q = U * A * LMTD
+///
+/// LMTD = (delta T in - delta T out) / (ln delta T in - ln delta T out)
+///
+///
+///
+///
+///
 pub fn calculate_overall_heat_flux_power_input(
     U : HeatTransfer,
     T_surrounding : ThermodynamicTemperature,
@@ -231,7 +240,6 @@ pub fn thermodynamic_temperature_to_temperature_interval(
 ///
 /// ```rust
 /// extern crate approx;
-/// 
 /// use heat_transfer_rust::ControlVolumeCalculations::CommonFunctions;
 ///
 /// use uom::si::{temperature_interval, thermodynamic_temperature};
@@ -265,4 +273,88 @@ pub fn subtract_two_thermodynamic_temperatures(
 
 }
 
+
+/// LMTD = (delta T in - delta T out) / (ln delta T in - ln delta T out)
+///
+/// note that reversing the order of delta T in and out doesn't really
+/// matter, as long as both numerator and denominator are reversed
+/// correctly
+///
+/// However, hot fluid temperatures and cold fluid temperature CANNOT
+/// be mixed up, otherwise the logarithms will return an error
+///
+/// ```rust
+/// extern crate approx;
+/// use heat_transfer_rust::ControlVolumeCalculations::CommonFunctions;
+///
+/// use uom::si::{temperature_interval, thermodynamic_temperature};
+/// use uom::si::f64::*;
+///
+/// let cold_fluid_temp_A = ThermodynamicTemperature::new::
+/// <thermodynamic_temperature::degree_celsius>(21.0);
+///
+/// let cold_fluid_temp_B = ThermodynamicTemperature::new::
+/// <thermodynamic_temperature::degree_celsius>(20.0);
+///
+/// let hot_fluid_temp_A = ThermodynamicTemperature::new::
+/// <thermodynamic_temperature::degree_celsius>(48.0);
+///
+/// let hot_fluid_temp_B = ThermodynamicTemperature::new::
+/// <thermodynamic_temperature::degree_celsius>(50.0);
+///
+/// let A_temperature_interval_value : f64 = hot_fluid_temp_A.value - 
+/// cold_fluid_temp_A.value;
+///
+/// let B_temperature_interval_value : f64 = hot_fluid_temp_B.value - 
+/// cold_fluid_temp_B.value;
+///
+/// let LMTD_value_expected = 
+/// (A_temperature_interval_value - B_temperature_interval_value)/
+/// (A_temperature_interval_value.ln() - 
+/// B_temperature_interval_value.ln());
+///
+/// let LMTD_test = CommonFunctions::log_mean_temperature_difference(
+/// cold_fluid_temp_A,
+/// cold_fluid_temp_B,
+/// hot_fluid_temp_A,
+/// hot_fluid_temp_B);
+///
+///
+/// approx::assert_relative_eq!(LMTD_value_expected, LMTD_test.value, 
+/// max_relative=0.001);
+///
+/// ```
+pub fn log_mean_temperature_difference(
+    temp_cold_fluid_A: ThermodynamicTemperature,
+    temp_cold_fluid_B: ThermodynamicTemperature,
+    temp_hot_fluid_A: ThermodynamicTemperature,
+    temp_hot_fluid_B: ThermodynamicTemperature) -> TemperatureInterval {
+
+    if temp_hot_fluid_A.value < temp_cold_fluid_A.value {
+        panic!("LMTD: hot fluid temperature input colder than \n
+               cold fluid temperature input")
+    }
+
+    if temp_hot_fluid_B.value < temp_cold_fluid_B.value {
+        panic!("LMTD: hot fluid temperature input colder than \n
+               cold fluid temperature input")
+    }
+    
+    let A_temperature_interval = 
+        subtract_two_thermodynamic_temperatures(
+            temp_hot_fluid_A, temp_cold_fluid_A);
+
+    let B_temperature_interval = 
+        subtract_two_thermodynamic_temperatures(
+            temp_hot_fluid_B, temp_cold_fluid_B);
+
+    let numerator = A_temperature_interval - B_temperature_interval;
+
+    let denominator = A_temperature_interval.value.ln() - 
+        B_temperature_interval.value.ln();
+
+
+    return numerator/denominator;
+
+}
 
