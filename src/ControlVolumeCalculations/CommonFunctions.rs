@@ -308,7 +308,7 @@ pub fn subtract_two_thermodynamic_temperatures(
 /// let B_temperature_interval_value : f64 = hot_fluid_temp_B.value - 
 /// cold_fluid_temp_B.value;
 ///
-/// let LMTD_value_expected = 
+/// let mut LMTD_value_expected = 
 /// (A_temperature_interval_value - B_temperature_interval_value)/
 /// (A_temperature_interval_value.ln() - 
 /// B_temperature_interval_value.ln());
@@ -319,6 +319,16 @@ pub fn subtract_two_thermodynamic_temperatures(
 /// hot_fluid_temp_A,
 /// hot_fluid_temp_B);
 ///
+///
+/// approx::assert_relative_eq!(LMTD_value_expected, LMTD_test.value, 
+/// max_relative=0.001);
+///
+/// // test 2 makes it more obvious
+///
+/// let mut LMTD_value_expected = 
+/// ((48_f64 - 21_f64) - (50_f64-20.0))/
+/// ((48_f64-21_f64).ln() - 
+/// (50_f64-20.0).ln());
 ///
 /// approx::assert_relative_eq!(LMTD_value_expected, LMTD_test.value, 
 /// max_relative=0.001);
