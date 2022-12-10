@@ -60,11 +60,16 @@ pub trait TemperatureEnthalpyConversion {
 /// Q = h (T_surface - T_fluid) A
 pub fn calculate_convection_heat_flux_power_input(
     h : HeatTransfer,
-    T_surface : TemperatureInterval,
-    T_fluid : TemperatureInterval,
+    T_surface : ThermodynamicTemperature,
+    T_fluid : ThermodynamicTemperature,
     A : Area) -> Power {
 
-    return h * (T_surface - T_fluid) * A; 
+    // note, i do this to calculate
+    // delta T = T_surface - T_fluid
+    let temperature_diff = 
+        subtract_two_thermodynamic_temperatures(T_surface, T_fluid);
+
+    return h * (temperature_diff) * A; 
 
 }
 
@@ -74,11 +79,16 @@ pub fn calculate_convection_heat_flux_power_input(
 /// Q = U (T_surrounding - T_fluid) A
 pub fn calculate_overall_heat_flux_power_input(
     U : HeatTransfer,
-    T_surrounding : TemperatureInterval,
-    T_fluid : TemperatureInterval,
+    T_surrounding : ThermodynamicTemperature,
+    T_fluid : ThermodynamicTemperature,
     A : Area) -> Power {
 
-    return U * (T_surrounding - T_fluid) * A; 
+    // note, i do this to calculate
+    // delta T = T_surrounding - T_fluid
+    let temperature_diff = 
+        subtract_two_thermodynamic_temperatures(T_surrounding, T_fluid);
+
+    return U * (temperature_diff) * A; 
 
 }
 
