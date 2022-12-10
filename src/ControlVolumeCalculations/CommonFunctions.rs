@@ -78,6 +78,9 @@ pub fn calculate_convection_heat_flux_power_input(
 ///
 /// assuming a fixed surrounding temperature
 ///
+/// calculates heat INPUT into fluid based on surrounding temperature
+/// estimated fluid inlet and fluid outlet temperature
+///
 /// Q = U * A * LMTD
 ///
 /// LMTD = (delta T in - delta T out) / (ln delta T in - ln delta T out)
@@ -89,15 +92,24 @@ pub fn calculate_convection_heat_flux_power_input(
 pub fn calculate_overall_heat_flux_power_input(
     U : HeatTransfer,
     T_surrounding : ThermodynamicTemperature,
-    T_fluid : ThermodynamicTemperature,
+    T_fluid_in : ThermodynamicTemperature,
+    T_fluid_out: ThermodynamicTemperature,
     A : Area) -> Power {
 
+    if T_fluid_in.value == T_fluid_out.value {
+        return U * A * 
+            subtract_two_thermodynamic_temperatures(T_surrounding , T_fluid_in);
+    }
     // note, i do this to calculate
     // delta T = T_surrounding - T_fluid
-    let temperature_diff = 
-        subtract_two_thermodynamic_temperatures(T_surrounding, T_fluid);
+    let LMTD = 
+        log_mean_temperature_difference(
+            T_surrounding,
+            T_surrounding, 
+            T_fluid_in,
+            T_fluid_out);
 
-    return U * (temperature_diff) * A; 
+    return U * (LMTD) * A; 
 
 }
 
