@@ -17,8 +17,9 @@ use uom::si::f64::*;
 ///
 /// and T_sys old and new
 ///
-/// To get enthalpy, I will then need to convert
-/// these temperatures to enthalpy
+/// (1) To get enthalpy, I will then need to convert
+/// these temperatures to enthalpy, so i will need methods
+/// for that
 ///
 ///
 pub struct PipeFluidTemperatureData {
@@ -38,5 +39,130 @@ pub struct TherminolPipeFluidEnthalpyData {
     outlet_enthalpy_old: AvailableEnergy,
     outlet_enthalpy_new: AvailableEnergy,
     fluid_enthalpy_old: AvailableEnergy,
-    fluid_enthalpy_new: AvailableEnergy
+    fluid_enthalpy_new: AvailableEnergy,
+
 }
+
+
+
+/// This trait helps the developer run through the steps
+/// of enthalpy calculation
+///
+///
+pub trait ExplicitCalculationSteps {
+
+    /// Step zero: set timestep and initial temperautres
+    ///
+    fn step_0_set_timestep_and_initial_temperatures(
+        &mut self,
+        timestep: Time,
+        initial_global_temp: ThermodynamicTemperature);
+
+    /// First Step: calculate enthalpies and bulk fluid temp
+    /// from temperatures
+    fn step_1_calculate_current_timestep_temp_enthalpies(
+        &mut self);
+
+    /// Second Step: calculate new system enthalpy from available
+    /// enthalpies, heat loss/gain and work done rates
+    /// will probably require timestep also
+    fn step_2_calculate_new_system_enthalpy(
+        &mut self, 
+        heat_supplied_to_fluid: Power,
+        work_done_on_fluid: Power,
+        timestep: Time);
+
+    /// third step: calculate new system
+    /// temperature based on new system enthalpy
+    ///
+    /// we will then obtain the inlet and outlet
+    /// temperatures based on the system temperatures
+    /// of each pipe using some matrix solver
+    /// which should give us a vector of inlet
+    /// temperatures
+    fn step_3_calculate_new_system_temperature(
+        &mut self) -> ThermodynamicTemperature;
+
+    /// after finding the vector of inlet temperatures
+    /// we should either give the thermodynamic temperautre
+    /// and put it into the function
+    /// 
+    /// or make a copy of the vector of inlet temperature
+    /// and feed it to this struct so that it can edit 
+    /// its own data
+    fn step_4_set_inlet_temperature(
+        &mut self,
+        new_inlet_temperature: ThermodynamicTemperature);
+
+    /// after finding the vector of inlet temperatures
+    /// we can next map the inlet temperatures to the
+    /// proper outlet temperature vecotr and also feed it
+    /// in
+    fn step_5_set_inlet_temperature(
+        &mut self,
+        new_outlet_temperature: ThermodynamicTemperature);
+
+
+    /// now that we have all the required information,
+    /// we can set the old temperatures to the values of
+    /// the new temperatures
+    fn step_6_update_current_timestep_temperatures(
+        &mut self);
+}
+
+extern crate fluid_mechanics_rust;
+use fluid_mechanics_rust::therminol_component::
+FluidProperties;
+use fluid_mechanics_rust::therminol_component::
+dowtherm_a_properties;
+
+
+impl FluidProperties for TherminolPipeFluidEnthalpyData {
+
+    fn density(fluid_temp: ThermodynamicTemperature) -> MassDensity {
+        return dowtherm_a_properties::getDowthermADensity(fluid_temp);
+    }
+
+    fn viscosity(
+        fluid_temp: ThermodynamicTemperature) -> DynamicViscosity{
+        return dowtherm_a_properties::getDowthermAViscosity(fluid_temp);
+    }
+
+    fn enthalpy(fluid_temp: ThermodynamicTemperature) -> AvailableEnergy{
+        return dowtherm_a_properties::getDowthermAEnthalpy(fluid_temp);
+    }
+
+    fn specific_heat_capacity(
+        fluid_temp: ThermodynamicTemperature) -> SpecificHeatCapacity{
+        return dowtherm_a_properties::
+            getDowthermAConstantPressureSpecificHeatCapacity(
+            fluid_temp);
+    }
+
+    fn thermal_conductivity(
+        fluid_temp: ThermodynamicTemperature) -> ThermalConductivity{
+        return dowtherm_a_properties::
+            getDowthermAThermalConductivity(fluid_temp);
+    }
+
+    fn get_temperature_from_enthalpy(
+        fluid_enthalpy: AvailableEnergy) -> ThermodynamicTemperature{
+        return dowtherm_a_properties::
+            get_temperature_from_enthalpy(fluid_enthalpy);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
