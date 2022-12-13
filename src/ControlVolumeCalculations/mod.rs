@@ -60,3 +60,8 @@ pub mod CommonFunctions;
 /// pipe heat transfer
 #[allow(non_snake_case)]
 pub mod TherminolDowthermPipes;
+
+/// This module contains Structs and Traits for
+/// Generic Fluid entities
+#[allow(non_snake_case)]
+pub mod FluidEntity_StructsAndTraits;
