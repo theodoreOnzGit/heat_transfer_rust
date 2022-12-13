@@ -32,8 +32,6 @@ pub struct PipeFluidTemperatureData {
 }
 
 pub struct TherminolPipeFluidEnthalpyData {
-    temperature_data: PipeFluidTemperatureData,
-
     inlet_enthalpy_old: AvailableEnergy,
     inlet_enthalpy_new: AvailableEnergy,
     outlet_enthalpy_old: AvailableEnergy,
@@ -117,7 +115,7 @@ pub trait ExplicitCalculationSteps {
 }
 
 
-pub trait InitialisationSteps {
+pub trait FluidEntityInitialisationSteps {
 
     /// Step zero: set timestep and initial temperautres
     ///
@@ -133,9 +131,25 @@ pub trait InitialisationSteps {
         fluid_volume: Volume);
 
     /// Step 1: connect a pipe or some other structure
-    /// to the inlet
+    /// to the inlet to this component or fluid entity
     fn step_1_connect_component_inlet(
-        &mut self);
+        &mut self,
+        other_fluid_entity: &mut impl FluidEntityInitialisationSteps);
+
+    /// Step 2: connect a pipe or some other structure
+    /// to the outlet of this component or fluid entity
+    ///
+    /// This step is optional because step 1 should be
+    /// able to connect pipe A's inlet to pipe B's outlet
+    fn step_2_conenct_component_outlet(
+        &mut self,
+        other_fluid_entity: &mut impl FluidEntityInitialisationSteps);
+
+    /// Step 3: add component to list or vector of components
+    fn step_3_add_component_to_vector(
+        &mut self,
+        fluid_entity_vector: &mut Vec<impl FluidEntityInitialisationSteps>
+        );
 
 }
 
