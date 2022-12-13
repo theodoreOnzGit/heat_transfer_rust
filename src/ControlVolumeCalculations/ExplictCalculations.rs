@@ -22,22 +22,24 @@ use uom::si::f64::*;
 /// for that
 ///
 ///
+#[derive(Clone)]
 pub struct PipeFluidTemperatureData {
-    inlet_temp_old: ThermodynamicTemperature,
-    inlet_temp_new: ThermodynamicTemperature,
-    outlet_temp_old: ThermodynamicTemperature,
-    outlet_temp_new: ThermodynamicTemperature,
-    fluid_temp_old: ThermodynamicTemperature,
-    fluid_temp_new: ThermodynamicTemperature
+    pub inlet_temp_old: ThermodynamicTemperature,
+    pub inlet_temp_new: ThermodynamicTemperature,
+    pub outlet_temp_old: ThermodynamicTemperature,
+    pub outlet_temp_new: ThermodynamicTemperature,
+    pub fluid_temp_old: ThermodynamicTemperature,
+    pub fluid_temp_new: ThermodynamicTemperature
 }
 
+#[derive(Clone)]
 pub struct TherminolPipeFluidEnthalpyData {
-    inlet_enthalpy_old: AvailableEnergy,
-    inlet_enthalpy_new: AvailableEnergy,
-    outlet_enthalpy_old: AvailableEnergy,
-    outlet_enthalpy_new: AvailableEnergy,
-    fluid_enthalpy_old: AvailableEnergy,
-    fluid_enthalpy_new: AvailableEnergy,
+    pub inlet_enthalpy_old: AvailableEnergy,
+    pub inlet_enthalpy_new: AvailableEnergy,
+    pub outlet_enthalpy_old: AvailableEnergy,
+    pub outlet_enthalpy_new: AvailableEnergy,
+    pub fluid_enthalpy_old: AvailableEnergy,
+    pub fluid_enthalpy_new: AvailableEnergy,
 
 }
 
@@ -46,13 +48,24 @@ pub struct TherminolPipeFluidEnthalpyData {
 /// 
 /// as well as the indices of the pipes or fluid entities
 /// connected to the inlet and outlet
+#[derive(Clone)]
 pub struct FluidEntityIndexData {
-    fluid_entity_index: i32,
-    inlet_fluid_entity_index: i32,
-    outlet_fluid_entity_index: i32,
+    pub fluid_entity_index: i32,
+    pub inlet_fluid_entity_index: i32,
+    pub outlet_fluid_entity_index: i32,
 }
 
+/// This structure stores the basic data for a 
+/// fluid entity
+/// 
+#[derive(Clone)]
+pub struct FluidEntityInitialisationParameters {
+    pub index_data: FluidEntityIndexData,
+    pub temperature_data: PipeFluidTemperatureData,
 
+    pub timestep: Time,
+    pub fluid_volume: Volume
+}
 
 /// This trait helps the developer run through the steps
 /// of enthalpy calculation
@@ -117,6 +130,8 @@ pub trait ExplicitCalculationSteps {
 
 pub trait FluidEntityInitialisationSteps {
 
+
+
     /// Step zero: set timestep and initial temperautres
     ///
     /// Also, the fluid volume for the fluid portion of the
@@ -128,30 +143,122 @@ pub trait FluidEntityInitialisationSteps {
         &mut self,
         timestep: Time,
         initial_global_temp: ThermodynamicTemperature,
-        fluid_volume: Volume);
+        fluid_volume: Volume,
+        fluid_entity_index: i32) -> Self;
 
     /// Step 1: connect a pipe or some other structure
     /// to the inlet to this component or fluid entity
-    fn step_1_connect_component_inlet(
+    fn step_1_connect_to_component_inlet(
         &mut self,
-        other_fluid_entity: &mut impl FluidEntityInitialisationSteps);
+        other_fluid_entity: &mut FluidEntityInitialisationParameters);
 
     /// Step 2: connect a pipe or some other structure
     /// to the outlet of this component or fluid entity
     ///
     /// This step is optional because step 1 should be
     /// able to connect pipe A's inlet to pipe B's outlet
-    fn step_2_conenct_component_outlet(
+    fn step_2_conenct_to_component_outlet(
         &mut self,
-        other_fluid_entity: &mut impl FluidEntityInitialisationSteps);
+        other_fluid_entity: &mut FluidEntityInitialisationParameters);
 
     /// Step 3: add component to list or vector of components
     fn step_3_add_component_to_vector(
         &mut self,
-        fluid_entity_vector: &mut Vec<impl FluidEntityInitialisationSteps>
+        fluid_entity_vector: &mut Vec<FluidEntityInitialisationParameters>
         );
 
 }
+
+impl FluidEntityInitialisationSteps 
+for FluidEntityInitialisationParameters {
+    fn step_0_set_timestep_and_initial_temperatures(
+        &mut self,
+        timestep: Time,
+        initial_global_temp: ThermodynamicTemperature,
+        fluid_volume: Volume,
+        fluid_entity_index: i32) -> Self {
+        
+        self.timestep = timestep;
+        self.fluid_volume = fluid_volume;
+
+
+        // set temperatures
+
+        self.temperature_data.inlet_temp_old = initial_global_temp;
+        self.temperature_data.inlet_temp_new = initial_global_temp;
+        self.temperature_data.outlet_temp_old = initial_global_temp;
+        self.temperature_data.outlet_temp_new = initial_global_temp;
+        self.temperature_data.fluid_temp_old = initial_global_temp;
+        self.temperature_data.fluid_temp_new = initial_global_temp;
+
+
+        // assign index number
+        self.index_data.fluid_entity_index = fluid_entity_index;
+
+        // return self
+        return self.clone();
+    }
+
+    fn step_1_connect_to_component_inlet(
+        &mut self,
+        other_fluid_entity: &mut FluidEntityInitialisationParameters){
+
+        // to connect another component to this component's
+        // inlet, i recognise that i must assign the other
+        // fluid component's index number to the 
+        // index number of the outlet for self
+
+        self.index_data.inlet_fluid_entity_index = 
+            other_fluid_entity.index_data.fluid_entity_index.
+            clone();
+        
+        // I likewise ensure that the other fluid entity
+        // index has its outlet fluid entity index
+        // assigned to this fluid entity index
+
+        other_fluid_entity.index_data.
+            outlet_fluid_entity_index = 
+            self.index_data.fluid_entity_index.clone();
+
+    }
+
+    fn step_2_conenct_to_component_outlet(
+        &mut self,
+        other_fluid_entity: &mut FluidEntityInitialisationParameters){
+
+        // for this, to connect another component
+        // to this component's outlet,  i look for the
+        // other fluid_entity's index and then 
+        // look for it's outlet index
+        
+        self.index_data.outlet_fluid_entity_index = 
+            other_fluid_entity.index_data.fluid_entity_index.
+            clone();
+
+        // i then connect this component to the other 
+        // component's inlet
+        //
+        other_fluid_entity.index_data.
+            inlet_fluid_entity_index =
+            self.index_data.fluid_entity_index.clone();
+
+    }
+
+    fn step_3_add_component_to_vector(
+        &mut self,
+        fluid_entity_vector: &mut Vec<FluidEntityInitialisationParameters>
+        ){
+
+        // here i just push a clone of the fluid entity
+        // into the vector
+        // it need not be arranged in any particular
+        // order
+        fluid_entity_vector.push(self.clone());
+    }
+
+
+}
+
 
 extern crate fluid_mechanics_rust;
 use fluid_mechanics_rust::therminol_component::

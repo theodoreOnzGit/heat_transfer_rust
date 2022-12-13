@@ -56,3 +56,7 @@ pub mod ExplictCalculations;
 #[allow(non_snake_case)]
 pub mod CommonFunctions;
 
+/// This module contains implementations for therminol VP1
+/// pipe heat transfer
+#[allow(non_snake_case)]
+pub mod TherminolDowthermPipes;
