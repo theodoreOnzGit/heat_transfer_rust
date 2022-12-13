@@ -53,10 +53,16 @@ pub trait ExplicitCalculationSteps {
 
     /// Step zero: set timestep and initial temperautres
     ///
+    /// Also, the fluid volume for the fluid portion of the
+    /// pipe can be assumed fixed (in this case we ignore 
+    /// thermal expansion for simplicity)
+    /// Otherwise, fluid volume and fluid density must be
+    /// taken at each timestep as appropriate parameters
     fn step_0_set_timestep_and_initial_temperatures(
         &mut self,
         timestep: Time,
-        initial_global_temp: ThermodynamicTemperature);
+        initial_global_temp: ThermodynamicTemperature,
+        fluid_volume: Volume);
 
     /// First Step: calculate enthalpies and bulk fluid temp
     /// from temperatures
@@ -70,7 +76,8 @@ pub trait ExplicitCalculationSteps {
         &mut self, 
         heat_supplied_to_fluid: Power,
         work_done_on_fluid: Power,
-        timestep: Time);
+        timestep: Time,
+        fluid_mass_flowrate: MassRate);
 
     /// third step: calculate new system
     /// temperature based on new system enthalpy
