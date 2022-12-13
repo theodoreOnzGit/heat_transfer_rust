@@ -43,6 +43,17 @@ pub struct TherminolPipeFluidEnthalpyData {
 
 }
 
+/// This structure stores the index
+/// of the fluid entity (pipe or some other component)
+/// 
+/// as well as the indices of the pipes or fluid entities
+/// connected to the inlet and outlet
+pub struct FluidEntityIndexData {
+    fluid_entity_index: i32,
+    inlet_fluid_entity_index: i32,
+    outlet_fluid_entity_index: i32,
+}
+
 
 
 /// This trait helps the developer run through the steps
@@ -51,18 +62,6 @@ pub struct TherminolPipeFluidEnthalpyData {
 ///
 pub trait ExplicitCalculationSteps {
 
-    /// Step zero: set timestep and initial temperautres
-    ///
-    /// Also, the fluid volume for the fluid portion of the
-    /// pipe can be assumed fixed (in this case we ignore 
-    /// thermal expansion for simplicity)
-    /// Otherwise, fluid volume and fluid density must be
-    /// taken at each timestep as appropriate parameters
-    fn step_0_set_timestep_and_initial_temperatures(
-        &mut self,
-        timestep: Time,
-        initial_global_temp: ThermodynamicTemperature,
-        fluid_volume: Volume);
 
     /// First Step: calculate enthalpies and bulk fluid temp
     /// from temperatures
@@ -103,7 +102,7 @@ pub trait ExplicitCalculationSteps {
 
     /// after finding the vector of inlet temperatures
     /// we can next map the inlet temperatures to the
-    /// proper outlet temperature vecotr and also feed it
+    /// proper outlet temperature vector and also feed it
     /// in
     fn step_5_set_inlet_temperature(
         &mut self,
@@ -115,6 +114,29 @@ pub trait ExplicitCalculationSteps {
     /// the new temperatures
     fn step_6_update_current_timestep_temperatures(
         &mut self);
+}
+
+
+pub trait InitialisationSteps {
+
+    /// Step zero: set timestep and initial temperautres
+    ///
+    /// Also, the fluid volume for the fluid portion of the
+    /// pipe can be assumed fixed (in this case we ignore 
+    /// thermal expansion for simplicity)
+    /// Otherwise, fluid volume and fluid density must be
+    /// taken at each timestep as appropriate parameters
+    fn step_0_set_timestep_and_initial_temperatures(
+        &mut self,
+        timestep: Time,
+        initial_global_temp: ThermodynamicTemperature,
+        fluid_volume: Volume);
+
+    /// Step 1: connect a pipe or some other structure
+    /// to the inlet
+    fn step_1_connect_component_inlet(
+        &mut self);
+
 }
 
 extern crate fluid_mechanics_rust;
