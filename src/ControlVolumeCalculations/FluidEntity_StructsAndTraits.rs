@@ -4,7 +4,7 @@ use uom::si::f64::*;
 /// This struct contains information for Fluid
 /// Temperatures in a Pipe (ie one inlet and
 /// one outlet)
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PipeFluidTemperatureData {
     pub inlet_temp_old: ThermodynamicTemperature,
     pub inlet_temp_new: ThermodynamicTemperature,

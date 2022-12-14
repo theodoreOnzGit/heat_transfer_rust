@@ -28,6 +28,8 @@ dowtherm_a_properties;
 /// or anything, but we just supply a fixed heat value to
 /// the therminol pipe
 ///
+/// This is the primitive version of calculating 
+/// enthalpies and temperatures
 /// ```rust
 /// 
 /// extern crate approx;
@@ -129,8 +131,82 @@ dowtherm_a_properties;
 /// assert_eq!(1, pipe2.fluid_parameters.index_data.inlet_fluid_entity_index);
 /// assert_eq!(3, pipe2.fluid_parameters.index_data.outlet_fluid_entity_index);
 ///
-/// //
+/// // The last part of the tests stipulates that we should 
+/// // populate a vector. This vector should be used in a for loop
+/// // so that we can autocalculate the temperatures at each time step
+/// // 
+/// // but for us to know how to calculate things, we'll probably want
+/// // to do it manually first, to best know how to operate
+/// // I am supposing that pipe 1 has a supply of 1000 W
+/// // pipe 2 has a heat loss of 200 W and pipe 3 has a heat loss of 800 W
 ///
+/// use uom::si::power::watt;
+///
+/// let pipe_1_heat = Power::new::<watt>(1000_f64);
+/// let pipe_2_heat = Power::new::<watt>(-200_f64);
+/// let pipe_3_heat = Power::new::<watt>(-800_f64);
+///
+/// let work_done_on_pipe_rate = Power::new::<watt>(0_f64);
+/// 
+/// // let's begin step 1 of calculation procedure
+///
+/// use crate::heat_transfer_rust::ControlVolumeCalculations::
+/// ExplictCalculations::ExplicitCalculationSteps;
+///
+///
+/// pipe1.step_1_calculate_current_timestep_temp_enthalpies();
+/// pipe2.step_1_calculate_current_timestep_temp_enthalpies();
+/// pipe3.step_1_calculate_current_timestep_temp_enthalpies();
+///
+/// // then step 2, which is to calculate new system enthalpy
+/// // we assume mass flowrate has already been calculated 
+/// // for this timestep or is constant
+/// 
+/// use uom::si::mass_rate::kilogram_per_second;
+///
+/// let timestep : Time = pipe1.fluid_parameters.timestep;
+/// let mass_flowrate : MassRate = MassRate::new::
+/// <kilogram_per_second>(0.18);
+///
+/// pipe1.step_2_calculate_new_system_enthalpy(
+/// pipe_1_heat,
+/// work_done_on_pipe_rate,
+/// timestep,
+/// mass_flowrate);
+///
+///
+/// pipe2.step_2_calculate_new_system_enthalpy(
+/// pipe_2_heat,
+/// work_done_on_pipe_rate,
+/// timestep,
+/// mass_flowrate);
+///
+/// 
+/// pipe3.step_2_calculate_new_system_enthalpy(
+/// pipe_3_heat,
+/// work_done_on_pipe_rate,
+/// timestep,
+/// mass_flowrate);
+///
+///
+/// // now for step 3, to calculate new thermodynamic temperature
+/// // for now i'll have to debug the therminol properties, it's not
+/// // giving the correct number
+///
+/// pipe1.step_3_calculate_new_system_temperature();
+/// pipe2.step_3_calculate_new_system_temperature();
+/// pipe3.step_3_calculate_new_system_temperature();
+///
+/// panic!("{}",pipe2.fluid_parameters.temperature_data.
+/// fluid_temp_new.value);
+/// 
+/// 
+///
+/// ```
+///
+///
+/// ```rust
+/// let a = 1;
 /// ```
 ///
 pub struct FixedHeatFluxTherminolPipe {
