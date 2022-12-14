@@ -74,6 +74,46 @@ pub struct FixedHeatFluxTherminolPipe {
 
 impl FixedHeatFluxTherminolPipe {
 
+    /// Constructor which creates the structure 
+    /// ```rust
+    /// 
+    /// extern crate approx;
+    /// use heat_transfer_rust::ControlVolumeCalculations::
+    /// TherminolDowthermPipes::*;
+    ///
+    /// use uom::si::f64::*;
+    /// use uom::si::time::second;
+    /// use uom::si::thermodynamic_temperature::kelvin;
+    /// use uom::si::volume::cubic_meter;
+    ///
+    /// // first let's initialise a pipe using a timestep
+    /// // global thermodynamic temperature and fluid volume
+    /// 
+    /// let timestep = Time::new::<second>(0.1_f64);
+    /// let initial_global_temp = ThermodynamicTemperature::
+    /// new::<kelvin>(300_f64);
+    ///
+    /// let fluid_volume = Volume::new::<cubic_meter>(
+    /// 0.01_f64.powf(3_f64));
+    ///
+    /// let fluid_entity_index: i32 = 4;
+    ///
+    /// // we are now going to initialise stuff
+    ///
+    /// use heat_transfer_rust::ControlVolumeCalculations::
+    /// FluidEntity_StructsAndTraits::FluidEntityInitialisationSteps;
+    ///
+    /// let mut pipe1 = FixedHeatFluxTherminolPipe::new();
+    ///
+    /// pipe1.step_0_set_timestep_and_initial_temperatures(
+    /// timestep,
+    /// initial_global_temp,
+    /// fluid_volume,
+    /// fluid_entity_index);
+    ///
+    ///
+    ///
+    /// ```
     pub fn new() -> Self {
 
         // we'll need to make a few data structures first
