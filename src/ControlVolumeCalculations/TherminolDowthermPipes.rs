@@ -137,14 +137,16 @@ dowtherm_a_properties;
 /// // 
 /// // but for us to know how to calculate things, we'll probably want
 /// // to do it manually first, to best know how to operate
-/// // I am supposing that pipe 1 has a supply of 1000 W
-/// // pipe 2 has a heat loss of 200 W and pipe 3 has a heat loss of 800 W
+/// // I am supposing that pipe 1 has a supply of 100 W
+/// // pipe 2 has a heat loss of 20 W and pipe 3 has a heat loss of 80 W
+/// // cannot do too much power because it will cause the temperature
+/// // to go below 20C, which is out of range
 ///
 /// use uom::si::power::watt;
 ///
-/// let pipe_1_heat = Power::new::<watt>(1000_f64);
-/// let pipe_2_heat = Power::new::<watt>(-200_f64);
-/// let pipe_3_heat = Power::new::<watt>(-800_f64);
+/// let pipe_1_heat = Power::new::<watt>(100_f64);
+/// let pipe_2_heat = Power::new::<watt>(-20_f64);
+/// let pipe_3_heat = Power::new::<watt>(-80_f64);
 ///
 /// let work_done_on_pipe_rate = Power::new::<watt>(0_f64);
 /// 
@@ -189,6 +191,7 @@ dowtherm_a_properties;
 /// mass_flowrate);
 ///
 ///
+///
 /// // now for step 3, to calculate new thermodynamic temperature
 /// // for now i'll have to debug the therminol properties, it's not
 /// // giving the correct number
@@ -197,9 +200,38 @@ dowtherm_a_properties;
 /// pipe2.step_3_calculate_new_system_temperature();
 /// pipe3.step_3_calculate_new_system_temperature();
 ///
-/// panic!("{}",pipe2.fluid_parameters.temperature_data.
-/// fluid_temp_new.value);
 /// 
+/// //panic!("{}",pipe2.fluid_parameters.temperature_data.
+/// //fluid_temp_new.value);
+///
+/// // to calculate for step 4, i will need to solve a few eqns
+/// //  T_new1 (kelvin) = (T_in1 + T_out1)/2
+/// //  T_new2 (kelvin) = (T_in2 + T_out2)/2
+/// //  T_new3 (kelvin) = (T_in3 + T_out3)/2
+/// // 
+/// // However, T_in1 = T_out3
+/// // T_in2 = T_out_1
+/// // T_in3 = T_out2
+///
+///
+/// //  In terms of inlet temperatures, this becomes:
+/// //  T_new1 (kelvin) = (T_in1 + T_in2)/2
+/// //  T_new2 (kelvin) = (T_in2 + T_in3)/2
+/// //  T_new3 (kelvin) = (T_in3 + T_in1)/2
+///
+/// // if i were to represent this in matrix form
+/// //
+/// //  |0.5 0.5 0.0| | T_in1 |   | T_new1 |
+/// //  |0.0 0.5 0.5| | T_in2 | = | T_new2 |
+/// //  |0.5 0.0 0.5| | T_in3 |   | T_new3 |
+/// //
+/// // we then solve this matrix
+/// // There are two problems here:
+/// // (1) How do we construct this matrix automatically,
+/// // (2) How do we solve this matrix automatically
+/// // 
+///
+/// // For now let's solve the second problem first
 /// 
 ///
 /// ```
