@@ -1,10 +1,18 @@
 #![warn(missing_docs)]
 extern crate uom;
+use uom::si::available_energy::joule_per_kilogram;
 use uom::si::f64::*;
 use uom::si::*;
+use uom::si::heat_capacity::joule_per_kelvin;
 use crate::ControlVolumeCalculations::ExplictCalculations::*;
 use crate::ControlVolumeCalculations::
 FluidEntity_StructsAndTraits::*;
+
+
+// here are imports for units
+use uom::si::time::second;
+use uom::si::volume::cubic_meter;
+use uom::si::thermodynamic_temperature::kelvin;
 
 extern crate fluid_mechanics_rust;
 use fluid_mechanics_rust::therminol_component::
@@ -36,21 +44,21 @@ dowtherm_a_properties;
 /// 
 /// let timestep = Time::new::<second>(0.1_f64);
 /// let initial_global_temp = ThermodynamicTemperature::
-/// new::<thermodynamic_temperature::kelvin>(300_f64);
+/// new::<kelvin>(300_f64);
 ///
 /// let fluid_volume = Volume::new::<cubic_meter>(
-/// 0.01_f64.powf(0.3));
+/// 0.01_f64.powf(3_f64));
 ///
-/// let fluid_entity_index : i32 = 4;
+/// let fluid_entity_index: i32 = 4;
 ///
 /// // we are now going to initialise stuff
 ///
 /// use heat_transfer_rust::ControlVolumeCalculations::
 /// FluidEntity_StructsAndTraits::FluidEntityInitialisationSteps;
 ///
-/// let pipe1 = 
-/// FixedHeatFluxTherminolPipe::
-/// step_0_set_timestep_and_initial_temperatures(
+/// let mut pipe1 = FixedHeatFluxTherminolPipe::new();
+///
+/// pipe1.step_0_set_timestep_and_initial_temperatures(
 /// timestep,
 /// initial_global_temp,
 /// fluid_volume,
@@ -67,7 +75,74 @@ pub struct FixedHeatFluxTherminolPipe {
 impl FixedHeatFluxTherminolPipe {
 
     pub fn new() -> Self {
-        panic!("to be determined")
+
+        // we'll need to make a few data structures first
+        // with some default values
+
+
+        let default_timestep: Time = 
+            Time::new::<second>(0.1);
+
+        let default_fluid_volume: Volume = 
+            Volume::new::<cubic_meter>(0.02_f64.powf(3.0));
+
+        // let's populate default index data
+        
+        let default_index: i32 = 0;
+
+        let default_index_data = 
+            FluidEntityIndexData { 
+                fluid_entity_index : default_index ,
+                inlet_fluid_entity_index : default_index,
+                outlet_fluid_entity_index : default_index,
+            };
+
+
+        // let's populate default temperature data
+        //
+
+        let default_temperature : ThermodynamicTemperature 
+            = ThermodynamicTemperature::new::
+            <kelvin>(310_f64);
+
+        let default_temperature_data : PipeFluidTemperatureData  
+            = PipeFluidTemperatureData { 
+                inlet_temp_old: default_temperature, 
+                inlet_temp_new: default_temperature, 
+                outlet_temp_old: default_temperature, 
+                outlet_temp_new: default_temperature, 
+                fluid_temp_old: default_temperature, 
+                fluid_temp_new: default_temperature,
+            };
+
+        // let's finally populate the enthalpy data
+
+        let default_enthalpy : AvailableEnergy =
+            AvailableEnergy::new::<joule_per_kilogram>(0_f64);
+
+        let default_enthalpy_data : PipeFluidEnthalpyData =
+            PipeFluidEnthalpyData { 
+                inlet_enthalpy_old: default_enthalpy, 
+                inlet_enthalpy_new: default_enthalpy, 
+                outlet_enthalpy_old: default_enthalpy, 
+                outlet_enthalpy_new: default_enthalpy, 
+                fluid_enthalpy_old: default_enthalpy, 
+                fluid_enthalpy_new: default_enthalpy 
+            };
+
+        let default_thermophysical_data : FluidEntityThermophysicalData
+            = FluidEntityThermophysicalData { 
+                index_data: default_index_data, 
+                temperature_data: default_temperature_data, 
+                enthalpy_data: default_enthalpy_data, 
+                timestep: default_timestep, 
+                fluid_volume: default_fluid_volume ,
+            };
+
+        return Self { 
+            fluid_parameters: default_thermophysical_data 
+        };
+
     }
 }
 
