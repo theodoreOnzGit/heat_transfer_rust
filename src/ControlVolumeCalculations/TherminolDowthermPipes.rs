@@ -12,10 +12,119 @@ FluidProperties;
 use fluid_mechanics_rust::therminol_component::
 dowtherm_a_properties;
 
+#[derive(Clone)]
+/// This struct or class represents a fixed heat
+/// flux therminol pipe
+/// 
+/// Here, we don't consider conjugate heat transfer 
+/// or anything, but we just supply a fixed heat value to
+/// the therminol pipe
+///
+/// ```rust
+/// 
+/// extern crate approx;
+/// use heat_transfer_rust::ControlVolumeCalculations::
+/// TherminolDowthermPipes::*;
+///
+/// use uom::si::f64::*;
+/// use uom::si::time::second;
+/// use uom::si::thermodynamic_temperature::kelvin;
+/// use uom::si::volume::cubic_meter;
+///
+/// // first let's initialise a pipe using a timestep
+/// // global thermodynamic temperature and fluid volume
+/// 
+/// let timestep = Time::new::<second>(0.1_f64);
+/// let initial_global_temp = ThermodynamicTemperature::
+/// new::<thermodynamic_temperature::kelvin>(300_f64);
+///
+/// let fluid_volume = Volume::new::<cubic_meter>(
+/// 0.01_f64.powf(0.3));
+///
+/// let fluid_entity_index : i32 = 4;
+///
+/// // we are now going to initialise stuff
+///
+/// use heat_transfer_rust::ControlVolumeCalculations::
+/// FluidEntity_StructsAndTraits::FluidEntityInitialisationSteps;
+///
+/// let pipe1 = 
+/// FixedHeatFluxTherminolPipe::
+/// step_0_set_timestep_and_initial_temperatures(
+/// timestep,
+/// initial_global_temp,
+/// fluid_volume,
+/// fluid_entity_index);
+///
+///
+///
+/// ```
+///
 pub struct FixedHeatFluxTherminolPipe {
     pub fluid_parameters: FluidEntityThermophysicalData,
 }
 
+impl FixedHeatFluxTherminolPipe {
+
+    pub fn new() -> Self {
+        panic!("to be determined")
+    }
+}
+
+impl FluidEntityInitialisationSteps for FixedHeatFluxTherminolPipe {
+    /// step zero, essentially the constructor
+
+    fn step_0_set_timestep_and_initial_temperatures(
+        &mut self,
+        timestep: Time,
+        initial_global_temp: ThermodynamicTemperature,
+        fluid_volume: Volume,
+        fluid_entity_index: i32) -> Self {
+
+        FluidEntityThermophysicalData::
+            step_0_set_timestep_and_initial_temperatures(
+                &mut self.fluid_parameters, 
+                timestep, 
+                initial_global_temp, 
+                fluid_volume, 
+                fluid_entity_index
+                );
+
+        return self.clone();
+    }
+    
+
+    fn step_1_connect_to_component_inlet(
+        &mut self,
+        other_fluid_entity: &mut FluidEntityThermophysicalData) {
+
+        FluidEntityThermophysicalData::
+            step_1_connect_to_component_inlet(
+                &mut self.fluid_parameters, 
+                other_fluid_entity);
+    }
+
+    fn step_2_conenct_to_component_outlet(
+         &mut self,
+         other_fluid_entity: &mut FluidEntityThermophysicalData){
+
+        FluidEntityThermophysicalData::
+            step_2_conenct_to_component_outlet(
+                &mut self.fluid_parameters, 
+                other_fluid_entity);
+
+    }
+
+    fn step_3_add_component_to_vector(
+        &mut self,
+        fluid_entity_vector: &mut Vec<FluidEntityThermophysicalData>){
+
+        FluidEntityThermophysicalData::
+            step_3_add_component_to_vector(
+                &mut self.fluid_parameters, 
+                fluid_entity_vector);
+    }
+}
 
 impl ExplicitCalculationSteps for FixedHeatFluxTherminolPipe {
     fn step_1_calculate_current_timestep_temp_enthalpies(
@@ -194,21 +303,39 @@ impl ExplicitCalculationSteps for FixedHeatFluxTherminolPipe {
 impl TherminolFluidProperties for FixedHeatFluxTherminolPipe {
 }
 
+/// Contains functions which return the
+/// viscosity, density, enthalpy, specific heat capacity
+/// and thermal conductivity for therminol VP 1 or
+/// dowtherm A in the range 20-180C
+///
+/// The dowtherm A correlations are used
+/// 
 pub trait TherminolFluidProperties {
+
+    /// returns dowtherm A density given a temperature
     fn density(fluid_temp: ThermodynamicTemperature) 
         -> MassDensity {
         return dowtherm_a_properties::getDowthermADensity(fluid_temp);
     }
 
+    /// returns dowtherm A dynamic viscosity given
+    /// a temperature
     fn viscosity(
         fluid_temp: ThermodynamicTemperature) -> DynamicViscosity{
         return dowtherm_a_properties::getDowthermAViscosity(fluid_temp);
     }
 
+    ///returns dowtherm A specific
+    ///enthalpy  given a temperature
+    ///
+    /// 0 J/kg specific enthalpy is assumed at 20C
+    /// and everything is calculated from there
     fn enthalpy(fluid_temp: ThermodynamicTemperature) -> AvailableEnergy{
         return dowtherm_a_properties::getDowthermAEnthalpy(fluid_temp);
     }
 
+    /// returns dowtherm A specific heat capacity
+    ///
     fn specific_heat_capacity(
         fluid_temp: ThermodynamicTemperature) -> SpecificHeatCapacity{
         return dowtherm_a_properties::
@@ -216,12 +343,18 @@ pub trait TherminolFluidProperties {
             fluid_temp);
     }
 
+    /// returns dowtherm A thermal conductivity
     fn thermal_conductivity(
         fluid_temp: ThermodynamicTemperature) -> ThermalConductivity{
         return dowtherm_a_properties::
             getDowthermAThermalConductivity(fluid_temp);
     }
 
+    ///returns dowtherm A temperature
+    ///  given a specific enthalpy
+    ///
+    /// 0 J/kg specific enthalpy is assumed at 20C
+    /// and everything is calculated from there
     fn get_temperature_from_enthalpy(
         fluid_enthalpy: AvailableEnergy) -> ThermodynamicTemperature{
         return dowtherm_a_properties::
