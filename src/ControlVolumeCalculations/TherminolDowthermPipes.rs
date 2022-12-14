@@ -49,7 +49,7 @@ dowtherm_a_properties;
 /// let fluid_volume = Volume::new::<cubic_meter>(
 /// 0.01_f64.powf(3_f64));
 ///
-/// let fluid_entity_index: i32 = 4;
+/// let mut fluid_entity_index: i32 = 1;
 ///
 /// // we are now going to initialise stuff
 ///
@@ -64,7 +64,72 @@ dowtherm_a_properties;
 /// fluid_volume,
 /// fluid_entity_index);
 ///
+/// // now suppose there are 3 pipes and i want to connect them
 ///
+/// let mut pipe2 = FixedHeatFluxTherminolPipe::new();
+///
+/// pipe2.step_0_set_timestep_and_initial_temperatures(
+/// timestep,
+/// initial_global_temp,
+/// fluid_volume,
+/// 2);
+///
+/// let mut pipe3 = FixedHeatFluxTherminolPipe::new();
+///
+/// pipe3.step_0_set_timestep_and_initial_temperatures(
+/// timestep,
+/// initial_global_temp,
+/// fluid_volume,
+/// 3);
+///
+///
+/// // This section tests if the pipe connection indexing is working 
+/// // correctly
+/// 
+/// // let pipe 2 be connected to the outlet of pipe 1
+///
+/// pipe1.step_2_conenct_to_component_outlet(&mut pipe2);
+///
+///
+/// // we shall also connect pipe3 to the outlet of pipe2
+///
+/// pipe2.step_2_conenct_to_component_outlet(&mut pipe3);
+///
+/// // lastly we shall connect pipe3 to the inlet of pipe1
+///
+/// pipe1.step_1_connect_to_component_inlet(&mut pipe3);
+///
+/// // so pipe 1's index should be 1
+///
+/// assert_eq!(1, pipe1.fluid_parameters.index_data.fluid_entity_index);
+///
+///
+/// // hence the index of the pipe connected to pipe 1's inlet should
+/// // be the index of pipe 3 (which is 3)
+///
+/// assert_eq!(3, pipe1.fluid_parameters.index_data.inlet_fluid_entity_index);
+///
+/// // finally, the outlet index of pipe 1 should be 2
+///
+/// assert_eq!(2, pipe1.fluid_parameters.index_data.outlet_fluid_entity_index);
+///
+///
+/// // and for pipe 3, it's index should be 3,
+/// // its inlet pipe index should be 2,
+/// // and its outlet pipe index should be 1
+///
+/// assert_eq!(3, pipe3.fluid_parameters.index_data.fluid_entity_index);
+/// assert_eq!(2, pipe3.fluid_parameters.index_data.inlet_fluid_entity_index);
+/// assert_eq!(1, pipe3.fluid_parameters.index_data.outlet_fluid_entity_index);
+///
+/// // for pipe 2, the index is 2, pipe 1 is connected to its inlet
+/// // and pipe 3 to its outlet
+///
+/// assert_eq!(2, pipe2.fluid_parameters.index_data.fluid_entity_index);
+/// assert_eq!(1, pipe2.fluid_parameters.index_data.inlet_fluid_entity_index);
+/// assert_eq!(3, pipe2.fluid_parameters.index_data.outlet_fluid_entity_index);
+///
+/// //
 ///
 /// ```
 ///
@@ -211,22 +276,22 @@ impl FluidEntityInitialisationSteps for FixedHeatFluxTherminolPipe {
 
     fn step_1_connect_to_component_inlet(
         &mut self,
-        other_fluid_entity: &mut FluidEntityThermophysicalData) {
+        other_fluid_entity: &mut Self) {
 
         FluidEntityThermophysicalData::
             step_1_connect_to_component_inlet(
                 &mut self.fluid_parameters, 
-                other_fluid_entity);
+                &mut other_fluid_entity.fluid_parameters);
     }
 
     fn step_2_conenct_to_component_outlet(
          &mut self,
-         other_fluid_entity: &mut FluidEntityThermophysicalData){
+         other_fluid_entity: &mut Self){
 
         FluidEntityThermophysicalData::
             step_2_conenct_to_component_outlet(
                 &mut self.fluid_parameters, 
-                other_fluid_entity);
+                &mut other_fluid_entity.fluid_parameters);
 
     }
 

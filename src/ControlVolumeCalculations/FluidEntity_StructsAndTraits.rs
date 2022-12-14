@@ -74,7 +74,7 @@ pub trait FluidEntityInitialisationSteps {
     /// to the inlet to this component or fluid entity
     fn step_1_connect_to_component_inlet(
         &mut self,
-        other_fluid_entity: &mut FluidEntityThermophysicalData);
+        other_fluid_entity: &mut Self);
 
     /// Step 2: connect a pipe or some other structure
     /// to the outlet of this component or fluid entity
@@ -83,7 +83,7 @@ pub trait FluidEntityInitialisationSteps {
     /// able to connect pipe A's inlet to pipe B's outlet
     fn step_2_conenct_to_component_outlet(
         &mut self,
-        other_fluid_entity: &mut FluidEntityThermophysicalData);
+        other_fluid_entity: &mut Self);
 
     /// Step 3: add component to list or vector of components
     fn step_3_add_component_to_vector(
