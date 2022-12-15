@@ -38,216 +38,6 @@ dowtherm_a_properties;
 ///
 /// ```rust
 ///
-/// extern crate approx;
-/// use heat_transfer_rust::ControlVolumeCalculations::
-/// TherminolDowthermPipes::*;
-///
-/// use uom::si::f64::*;
-/// use uom::si::time::second;
-/// use uom::si::thermodynamic_temperature::kelvin;
-/// use uom::si::volume::cubic_meter;
-///
-/// 
-/// let timestep = Time::new::<second>(0.1_f64);
-/// let initial_global_temp = ThermodynamicTemperature::
-/// new::<kelvin>(300_f64);
-/// let fluid_volume = Volume::new::<cubic_meter>(
-/// 0.01_f64.powf(3_f64));
-/// let mut fluid_entity_index: i32 = 1;
-///
-/// // first thing first, i want to streamline the pipe creation process
-/// // (and of course, eventually place those hydrodynamic parameters as well,
-/// // but will probably think about that later)
-/// // 
-/// // and i also want to use a for loop to do these calculation steps
-/// // hence, putting these in a vector form will be good
-/// // so i will have 3 vectors,
-/// // one vector for inlet temperatures
-/// // one vector for outlet temperatures
-/// // one vector for all the FixedHeatFluxTherminolPipe
-///
-/// let mut therminolPipeVec: Vec<FixedHeatFluxTherminolPipe> 
-/// = vec![];
-///
-/// let mut inlet_temp_vec: Vec<ThermodynamicTemperature>
-/// = vec![];
-///
-/// let mut outlet_temp_vec: Vec<ThermodynamicTemperature>
-/// = vec![];
-///
-/// pub struct HeatFluxPipeFactory {
-///     pub current_max_index: i32,
-/// }
-///
-/// impl HeatFluxPipeFactory {
-///
-///     pub fn new() -> Self {
-///
-///         return Self { current_max_index: 0 };
-///
-///     }
-///
-///     pub fn add_new_component(
-///     &mut self,
-///     timestep: Time,
-///     initial_global_temp: ThermodynamicTemperature,
-///     fluid_volume: Volume,
-///     generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>,
-///     inlet_temp_vec: &mut Vec<ThermodynamicTemperature>,
-///     outlet_temp_vec: &mut Vec<ThermodynamicTemperature>
-///     ) {
-///
-///         use crate::heat_transfer_rust::ControlVolumeCalculations::
-///         FluidEntity_StructsAndTraits::FluidEntityInitialisationSteps;
-///         
-///         let mut new_pipe = FixedHeatFluxTherminolPipe::new();
-///
-///         let fluid_entity_index = self.current_max_index;
-///
-///         new_pipe.step_0_set_timestep_and_initial_temperatures(
-///         timestep,
-///         initial_global_temp,
-///         fluid_volume,
-///         fluid_entity_index);
-///
-///         generic_component_vec.push(new_pipe);
-///         inlet_temp_vec.push(initial_global_temp);
-///         outlet_temp_vec.push(initial_global_temp);
-///
-///         self.current_max_index = fluid_entity_index + 1;
-///
-///     }
-///
-/// }
-///
-/// let mut factory_obj = HeatFluxPipeFactory::new();
-///
-/// // so this is pipe 1
-///
-/// factory_obj.add_new_component(
-/// timestep,
-/// initial_global_temp,
-/// fluid_volume,
-/// &mut therminolPipeVec,
-/// &mut inlet_temp_vec,
-/// &mut outlet_temp_vec);
-///
-/// // only issue here, no name for each component, may be difficult
-/// // to differentiate
-///
-///
-/// // so this is pipe 2
-///
-/// factory_obj.add_new_component(
-/// timestep,
-/// initial_global_temp,
-/// fluid_volume,
-/// &mut therminolPipeVec,
-/// &mut inlet_temp_vec,
-/// &mut outlet_temp_vec);
-///
-/// 
-/// // so this is pipe 3
-///
-/// factory_obj.add_new_component(
-/// timestep,
-/// initial_global_temp,
-/// fluid_volume,
-/// &mut therminolPipeVec,
-/// &mut inlet_temp_vec,
-/// &mut outlet_temp_vec);
-///
-/// // the next step is to connect each pipe
-/// // so i can try giving a factory method which helps to connect
-/// // two pipe objects
-/// // for this i will need a pipe vector, 
-///
-/// // the index of the pipe which
-/// // we are interested to connect at the outlet
-/// // and the pipe we are interested to connect at the inlet
-///
-/// impl HeatFluxPipeFactory {
-/// 
-///     pub fn connect_inlet_and_outlet_pipe(
-///     &self,
-///     connect_to_pipe_outlet_index: usize,
-///     connect_to_pipe_inlet_index: usize,
-///     generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>){
-///
-///
-///         // Basically in this function, i cannot use borrow
-///         // two mutable versions of the component vector and then
-///         // change values in them
-///         // i have to make a copy of the front and back pipe
-///         // and then use those to perform the value changes
-///         // the other way of course, is to change the value indices manually
-///
-///         use crate::heat_transfer_rust::ControlVolumeCalculations::
-///         FluidEntity_StructsAndTraits::FluidEntityInitialisationSteps;
-///
-///         let mut pipe_back = 
-///         generic_component_vec[connect_to_pipe_outlet_index].clone();
-///
-///         let mut pipe_front = 
-///         generic_component_vec[connect_to_pipe_inlet_index].clone();
-///
-///         pipe_front.step_1_connect_to_component_inlet(
-///         &mut generic_component_vec[connect_to_pipe_outlet_index]);
-///
-///         pipe_back.step_2_conenct_to_component_outlet(
-///         &mut generic_component_vec[connect_to_pipe_inlet_index]);
-///
-///     }
-///
-///
-/// }
-///
-/// // I can use the above method to connect my pipes!
-/// // i have it this way:
-/// // 1 -> 2 -> 3 
-/// // and 3 connects back to 1 in a circular fashion
-///
-/// // however pipe 1 has an index of 0,
-/// // pipe 2 has an index of 1 and so on...
-///
-/// factory_obj.connect_inlet_and_outlet_pipe(0,1,
-/// &mut therminolPipeVec);
-///
-/// factory_obj.connect_inlet_and_outlet_pipe(1,2,
-/// &mut therminolPipeVec);
-///
-/// factory_obj.connect_inlet_and_outlet_pipe(2,0,
-/// &mut therminolPipeVec);
-///
-///
-/// // in doing so, i have connected all the pipes and these
-/// // pipes will know the correct index
-///
-/// // all right, now let's take pipe1 for example,
-/// // its own index should be 0
-/// // the pipe connected to its back is index 2,
-/// // the pipe connected to its front is index 1
-/// // i'm going to repeat it all for the pipes involved
-///
-/// let mut pipe1 = therminolPipeVec[0].clone();
-///
-/// assert_eq!(0, pipe1.fluid_parameters.index_data.fluid_entity_index);
-/// assert_eq!(2, pipe1.fluid_parameters.index_data.inlet_fluid_entity_index);
-/// assert_eq!(1, pipe1.fluid_parameters.index_data.outlet_fluid_entity_index);
-///
-/// let mut pipe2 = therminolPipeVec[1].clone();
-///
-/// assert_eq!(1, pipe2.fluid_parameters.index_data.fluid_entity_index);
-/// assert_eq!(0, pipe2.fluid_parameters.index_data.inlet_fluid_entity_index);
-/// assert_eq!(2, pipe2.fluid_parameters.index_data.outlet_fluid_entity_index);
-///
-/// let mut pipe3 = therminolPipeVec[2].clone();
-///
-/// assert_eq!(2, pipe3.fluid_parameters.index_data.fluid_entity_index);
-/// assert_eq!(1, pipe3.fluid_parameters.index_data.inlet_fluid_entity_index);
-/// assert_eq!(0, pipe3.fluid_parameters.index_data.outlet_fluid_entity_index);
-///
-///
 /// ```
 ///
 ///
@@ -587,6 +377,275 @@ dowtherm_a_properties;
 #[derive(Clone)]
 pub struct FixedHeatFluxTherminolPipe {
     pub fluid_parameters: FluidEntityThermophysicalData,
+}
+
+#[cfg(test)]
+mod sandbox_therminol_dowtherm_pipes {
+    #[test]
+    pub fn sandbox_autobuild_conenct_and_autocalculation() {
+        extern crate approx;
+
+        use crate::ControlVolumeCalculations::TherminolDowthermPipes::
+            FixedHeatFluxTherminolPipe;
+
+        use crate:: ControlVolumeCalculations::FluidEntity_StructsAndTraits::
+            FluidEntityInitialisationSteps;
+
+
+        use uom::si::f64::*;
+        use uom::si::time::second;
+        use uom::si::thermodynamic_temperature::kelvin;
+        use uom::si::volume::cubic_meter;
+
+
+        let timestep = Time::new::<second>(0.1_f64);
+        let initial_global_temp = ThermodynamicTemperature::
+            new::<kelvin>(300_f64);
+        let fluid_volume = Volume::new::<cubic_meter>(
+            0.01_f64.powf(3_f64));
+        let mut fluid_entity_index: i32 = 1;
+
+        // first thing first, i want to streamline the pipe creation process
+        // (and of course, eventually place those hydrodynamic parameters as well,
+        // but will probably think about that later)
+        // 
+        // and i also want to use a for loop to do these calculation steps
+        // hence, putting these in a vector form will be good
+        // so i will have 3 vectors,
+        // one vector for inlet temperatures
+        // one vector for outlet temperatures
+        // one vector for all the FixedHeatFluxTherminolPipe
+
+        let mut therminolPipeVec: Vec<FixedHeatFluxTherminolPipe> 
+            = vec![];
+
+        let mut inlet_temp_vec: Vec<ThermodynamicTemperature>
+            = vec![];
+
+        let mut outlet_temp_vec: Vec<ThermodynamicTemperature>
+            = vec![];
+
+        pub struct HeatFluxPipeFactory {
+            pub current_max_index: i32,
+        }
+
+        impl HeatFluxPipeFactory {
+
+            pub fn new() -> Self {
+
+                return Self { current_max_index: 0 };
+
+            }
+
+            pub fn add_new_component(
+                &mut self,
+                timestep: Time,
+                initial_global_temp: ThermodynamicTemperature,
+                fluid_volume: Volume,
+                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>,
+                inlet_temp_vec: &mut Vec<ThermodynamicTemperature>,
+                outlet_temp_vec: &mut Vec<ThermodynamicTemperature>
+                ) {
+
+                let mut new_pipe = FixedHeatFluxTherminolPipe::new();
+
+                let fluid_entity_index = self.current_max_index;
+
+                new_pipe.step_0_set_timestep_and_initial_temperatures(
+                    timestep,
+                    initial_global_temp,
+                    fluid_volume,
+                    fluid_entity_index);
+
+                generic_component_vec.push(new_pipe);
+                inlet_temp_vec.push(initial_global_temp);
+                outlet_temp_vec.push(initial_global_temp);
+
+                self.current_max_index = fluid_entity_index + 1;
+
+            }
+
+        }
+
+        let mut factory_obj = HeatFluxPipeFactory::new();
+
+        // so this is pipe 1
+
+        factory_obj.add_new_component(
+            timestep,
+            initial_global_temp,
+            fluid_volume,
+            &mut therminolPipeVec,
+            &mut inlet_temp_vec,
+            &mut outlet_temp_vec);
+
+        // only issue here, no name for each component, may be difficult
+        // to differentiate
+
+
+        // so this is pipe 2
+
+        factory_obj.add_new_component(
+            timestep,
+            initial_global_temp,
+            fluid_volume,
+            &mut therminolPipeVec,
+            &mut inlet_temp_vec,
+            &mut outlet_temp_vec);
+
+
+        // so this is pipe 3
+
+        factory_obj.add_new_component(
+            timestep,
+            initial_global_temp,
+            fluid_volume,
+            &mut therminolPipeVec,
+            &mut inlet_temp_vec,
+            &mut outlet_temp_vec);
+
+        // the next step is to connect each pipe
+        // so i can try giving a factory method which helps to connect
+        // two pipe objects
+        // for this i will need a pipe vector, 
+
+        // the index of the pipe which
+        // we are interested to connect at the outlet
+        // and the pipe we are interested to connect at the inlet
+
+        impl HeatFluxPipeFactory {
+
+            pub fn connect_inlet_and_outlet_pipe(
+                &self,
+                connect_to_pipe_outlet_index: usize,
+                connect_to_pipe_inlet_index: usize,
+                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>){
+
+
+                // Basically in this function, i cannot use borrow
+                // two mutable versions of the component vector and then
+                // change values in them
+                // i have to make a copy of the front and back pipe
+                // and then use those to perform the value changes
+                // the other way of course, is to change the value indices manually
+
+
+                let mut pipe_back = 
+                    generic_component_vec[connect_to_pipe_outlet_index].clone();
+
+                let mut pipe_front = 
+                    generic_component_vec[connect_to_pipe_inlet_index].clone();
+
+                pipe_front.step_1_connect_to_component_inlet(
+                    &mut generic_component_vec[connect_to_pipe_outlet_index]);
+
+                pipe_back.step_2_conenct_to_component_outlet(
+                    &mut generic_component_vec[connect_to_pipe_inlet_index]);
+
+            }
+
+
+        }
+
+        // I can use the above method to connect my pipes!
+        // i have it this way:
+        // 1 -> 2 -> 3 
+        // and 3 connects back to 1 in a circular fashion
+
+        // however pipe 1 has an index of 0,
+        // pipe 2 has an index of 1 and so on...
+
+        factory_obj.connect_inlet_and_outlet_pipe(0,1,
+                                                  &mut therminolPipeVec);
+
+        factory_obj.connect_inlet_and_outlet_pipe(1,2,
+                                                  &mut therminolPipeVec);
+
+        factory_obj.connect_inlet_and_outlet_pipe(2,0,
+                                                  &mut therminolPipeVec);
+
+
+        // in doing so, i have connected all the pipes and these
+        // pipes will know the correct index
+
+        // all right, now let's take pipe1 for example,
+        // its own index should be 0
+        // the pipe connected to its back is index 2,
+        // the pipe connected to its front is index 1
+        // i'm going to repeat it all for the pipes involved
+
+        let mut pipe1 = therminolPipeVec[0].clone();
+
+        assert_eq!(0, pipe1.fluid_parameters.index_data.fluid_entity_index);
+
+        assert_eq!(2, pipe1.fluid_parameters.index_data.
+                   inlet_fluid_entity_index);
+
+        assert_eq!(1, pipe1.fluid_parameters.index_data.
+                   outlet_fluid_entity_index);
+
+        let mut pipe2 = therminolPipeVec[1].clone();
+
+        assert_eq!(1, pipe2.fluid_parameters.index_data.
+                   fluid_entity_index);
+
+        assert_eq!(0, pipe2.fluid_parameters.index_data.
+                   inlet_fluid_entity_index);
+
+        assert_eq!(2, pipe2.fluid_parameters.index_data.
+                   outlet_fluid_entity_index);
+
+        let mut pipe3 = therminolPipeVec[2].clone();
+
+        assert_eq!(2, pipe3.fluid_parameters.index_data.
+                   fluid_entity_index);
+        assert_eq!(1, pipe3.fluid_parameters.index_data.
+                   inlet_fluid_entity_index);
+        assert_eq!(0, pipe3.fluid_parameters.index_data.
+                   outlet_fluid_entity_index);
+
+
+        // now that we have connected the pipes, we can start
+        // calculating
+        // we can perhaps create two vectors,
+        // one for work done, one for heat input in fluid
+        // one for work done on fluid
+        //
+        use crate::ControlVolumeCalculations::ExplictCalculations::
+            ExplicitCalculationSteps;
+
+        impl HeatFluxPipeFactory {
+
+            pub fn step_1_calculate_current_timestep_temp_enthalpies(&self,
+                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>){
+
+                // start function
+
+                let max_vec_index = 
+                    generic_component_vec.len() - 1;
+
+                for i in 0..max_vec_index {
+                    generic_component_vec[i].
+                        step_1_calculate_current_timestep_temp_enthalpies();
+
+                }
+
+
+                // end of function
+            }
+        }
+
+        // we can then use this function to help us with step 1
+        //
+
+        factory_obj.step_1_calculate_current_timestep_temp_enthalpies(
+            &mut therminolPipeVec);
+
+
+
+
+    }
+
 }
 
 impl FixedHeatFluxTherminolPipe {
