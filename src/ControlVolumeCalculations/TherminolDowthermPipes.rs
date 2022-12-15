@@ -29,7 +29,10 @@ dowtherm_a_properties;
 /// the therminol pipe
 ///
 /// This is the primitive version of calculating 
-/// enthalpies and temperatures
+/// enthalpies and temperatures..
+///
+/// This is the trial and error bit where i am
+/// sort of explaining my thought process for code development
 /// ```rust
 /// 
 /// extern crate approx;
@@ -237,7 +240,6 @@ dowtherm_a_properties;
 /// //  T_new3 (kelvin) = (T_in3 + T_in1)/2
 ///
 /// // if i were to represent this in matrix form
-/// //
 /// //  |0.5 0.5 0.0| | T_in1 |   | T_new1 |
 /// //  |0.0 0.5 0.5| | T_in2 | = | T_new2 |
 /// //  |0.5 0.0 0.5| | T_in3 |   | T_new3 |
@@ -283,6 +285,21 @@ dowtherm_a_properties;
 /// approx::assert_relative_eq!(302_f64, x[0], max_relative=0.01);
 /// approx::assert_relative_eq!(309.5_f64, x[1], max_relative=0.01);
 /// approx::assert_relative_eq!(288.1_f64, x[2], max_relative=0.01);
+///
+///
+/// // now this solves the thing ok, and it means that there is a 7.5 C
+/// // increase in pipe 1,
+/// // a 21.4C decrease in pipe 2
+/// // and a 13.9 C increase in pipe 3
+/// // this makes no physical sense
+///
+/// // as compared to pipe 1 outlet being 305.91K, inlet is 295.2K
+/// // pipe 2 outlet 298.8K, inlet 305.91K,
+/// // pipe 3 outlet 295.2K, inlet 298.8K 
+/// // in the former case, energy is not conserved
+/// // therefore, we shall not use the fluid temp
+/// // T_fluid = (T_in + T_out)/2.0 
+/// // for use in energy balance
 /// 
 ///
 /// ```
