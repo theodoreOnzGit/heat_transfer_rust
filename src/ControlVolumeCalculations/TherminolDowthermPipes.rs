@@ -31,6 +31,16 @@ dowtherm_a_properties;
 /// This is the primitive version of calculating 
 /// enthalpies and temperatures..
 ///
+///
+///
+/// PART 2:
+///
+/// This trial and error bit helps to streamline the temperature assignment
+/// ```rust
+/// let a = 1;
+/// ```
+///
+/// PART 1:
 /// This is the trial and error bit where i am
 /// sort of explaining my thought process for code development
 /// ```rust
@@ -300,14 +310,68 @@ dowtherm_a_properties;
 /// // therefore, we shall not use the fluid temp
 /// // T_fluid = (T_in + T_out)/2.0 
 /// // for use in energy balance
+/// // thus, i will use the outlet temperature to be the same
+/// // temperature as the control volume temperature
+/// // similar to a CSTR (continuously stirred tank reactor)
+/// // and we assume perfect mixing
 /// 
+/// // step 4 and 5
+/// // for the inlet temperatures we can use the T_new1, T_new2, and T_new3
+/// // as outlet temps for pipe 1,2 and 3
+///
+/// pipe1.step_4_set_inlet_temperature(T_new3);
+/// pipe2.step_4_set_inlet_temperature(T_new1);
+/// pipe3.step_4_set_inlet_temperature(T_new2);
+///
+/// pipe1.step_5_set_outlet_temperature(T_new1);
+/// pipe2.step_5_set_outlet_temperature(T_new2);
+/// pipe3.step_5_set_outlet_temperature(T_new3);
+///
+/// // step 6: now we set the old inlet and outlet temperatures
+///
+/// pipe1.step_6_update_current_timestep_temperatures();
+/// pipe2.step_6_update_current_timestep_temperatures();
+/// pipe3.step_6_update_current_timestep_temperatures();
+///
+/// // if everything works out well, the old temperatures
+/// // should reflect the new values at the next time step
+///
+///
+/// approx::assert_relative_eq!(305.9, 
+/// pipe1.fluid_parameters.temperature_data.outlet_temp_old.value, 
+/// max_relative=0.001);
+///
+/// approx::assert_relative_eq!(298.8, 
+/// pipe2.fluid_parameters.temperature_data.outlet_temp_old.value, 
+/// max_relative=0.001);
+///
+/// approx::assert_relative_eq!(295.2, 
+/// pipe3.fluid_parameters.temperature_data.outlet_temp_old.value, 
+/// max_relative=0.001);
+///
+/// // now we test the inlet temperatures
+///
+/// approx::assert_relative_eq!(305.9, 
+/// pipe2.fluid_parameters.temperature_data.inlet_temp_old.value, 
+/// max_relative=0.001);
+///
+/// approx::assert_relative_eq!(298.8, 
+/// pipe3.fluid_parameters.temperature_data.inlet_temp_old.value, 
+/// max_relative=0.001);
+///
+/// approx::assert_relative_eq!(295.2, 
+/// pipe1.fluid_parameters.temperature_data.inlet_temp_old.value, 
+/// max_relative=0.001);
+/// 
+/// // this concludes the testing for one round of a 3 pipe problem
+/// // we might want to do the temperature assignment in a more streamlined
+/// // manner
 ///
 /// ```
 ///
 ///
-/// ```rust
-/// let a = 1;
-/// ```
+///
+///
 ///
 pub struct FixedHeatFluxTherminolPipe {
     pub fluid_parameters: FluidEntityThermophysicalData,
@@ -531,6 +595,14 @@ impl ExplicitCalculationSteps for FixedHeatFluxTherminolPipe {
     ///
     /// h_new = h_old + delta T * 
     /// (H_in - H_out + Q + W)
+    ///
+    /// the fluid properties except for enthalpy
+    /// are calculated at T_fluid = (T_in - T_out)/2
+    ///
+    ///
+    /// fluid enthalpy wise, we assume perfect mixing
+    /// which means the bulk temperature of the pipe is
+    /// the same as the exit temperature
     fn step_2_calculate_new_system_enthalpy(
         &mut self, 
         heat_supplied_to_fluid: Power,
@@ -573,7 +645,7 @@ impl ExplicitCalculationSteps for FixedHeatFluxTherminolPipe {
         let h_old : Energy = 
             control_volume_mass *
             self.fluid_parameters.enthalpy_data.
-            fluid_enthalpy_old;
+            outlet_enthalpy_old;
 
         let h_new : Energy = 
             h_old + heat_addition;
@@ -639,20 +711,38 @@ impl ExplicitCalculationSteps for FixedHeatFluxTherminolPipe {
     fn step_6_update_current_timestep_temperatures(
         &mut self) {
 
+        // set inlet and outlet temperatures
         self.fluid_parameters.temperature_data.
             inlet_temp_old =
             self.fluid_parameters.temperature_data.
             inlet_temp_new.clone();
 
         self.fluid_parameters.temperature_data.
+            fluid_temp_old =
+            self.fluid_parameters.temperature_data.
+            fluid_temp_new.clone();
+
+
+        // set new fluid temperature to average
+        // of new inlet and outlet temperatures
+
+        let new_fluid_temp_value =
+            (self.fluid_parameters.temperature_data.
+            inlet_temp_new.value + 
+            self.fluid_parameters.temperature_data.
+            outlet_temp_new.value)/2.0;
+
+        self.fluid_parameters.temperature_data.
+            fluid_temp_new = 
+            ThermodynamicTemperature::new::
+            <kelvin>(new_fluid_temp_value);
+
+
+        self.fluid_parameters.temperature_data.
             outlet_temp_old =
             self.fluid_parameters.temperature_data.
             outlet_temp_new.clone();
 
-        self.fluid_parameters.temperature_data.
-            fluid_temp_old =
-            self.fluid_parameters.temperature_data.
-            fluid_temp_new.clone();
     }
 }
 
