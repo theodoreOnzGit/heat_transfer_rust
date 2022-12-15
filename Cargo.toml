@@ -8,4 +8,6 @@ edition = "2021"
 [dependencies]
 approx = "0.5.1"
 fluid_mechanics_rust = { git = "https://github.com/theodoreOnzGit/fluid_mechanics_rust", version = "0.1.0" }
+ndarray = "0.15.6"
+ndarray-linalg = { version = "0.16.0", features = [ "openblas-static"] }
 uom = { git = "https://github.com/iliekturtles/uom", version = "0.33.0" }

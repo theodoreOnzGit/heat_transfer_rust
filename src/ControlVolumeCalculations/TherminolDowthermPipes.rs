@@ -196,11 +196,28 @@ dowtherm_a_properties;
 /// // for now i'll have to debug the therminol properties, it's not
 /// // giving the correct number
 ///
-/// pipe1.step_3_calculate_new_system_temperature();
-/// pipe2.step_3_calculate_new_system_temperature();
-/// pipe3.step_3_calculate_new_system_temperature();
+/// let T_new1 = pipe1.step_3_calculate_new_system_temperature();
+/// let T_new2 = pipe2.step_3_calculate_new_system_temperature();
+/// let T_new3 = pipe3.step_3_calculate_new_system_temperature();
 ///
-/// 
+/// let mut error_string: String = T_new1.value.to_string();
+///
+/// error_string.push_str(" ");
+/// error_string.push_str(&T_new2.value.to_string());
+/// error_string.push_str(" ");
+/// error_string.push_str(&T_new3.value.to_string());
+///
+/// // panic!("{}", error_string);
+///
+/// // at time of test
+/// // T_new1 = 305.91 K
+/// // T_new2 = 298.8 K
+/// // T_new3 = 295.2 K
+///
+/// approx::assert_relative_eq!(305.9, T_new1.value, max_relative=0.001);
+/// approx::assert_relative_eq!(298.8, T_new2.value, max_relative=0.001);
+/// approx::assert_relative_eq!(295.2, T_new3.value, max_relative=0.001);
+///
 /// //panic!("{}",pipe2.fluid_parameters.temperature_data.
 /// //fluid_temp_new.value);
 ///
@@ -232,6 +249,40 @@ dowtherm_a_properties;
 /// // 
 ///
 /// // For now let's solve the second problem first
+/// // for reference
+/// // solving this results in (i used scilab linsolve)
+/// // T_in1 = 302   K
+/// // T_in2 = 309.5 K
+/// // T_in3 = 288.1 K
+/// // 
+/// // the way forward:
+///
+/// extern crate ndarray;
+/// use ndarray::prelude::*;
+/// use ndarray_linalg::Solve;
+///
+/// // first we make a 2D array 
+/// let matrixA : Array2<f64> = 
+/// array![
+/// [0.5, 0.5, 0.0],
+/// [0.0, 0.5, 0.5],
+/// [0.5, 0.0, 0.5]
+/// ];
+///
+/// let vectorB: Array1<f64> = 
+/// array![ 305.91_f64, 298.8, 295.2 ];
+/// //
+/// // note that for this to work, i needed to install
+/// // ndarray_linalg with features
+/// // openblas-static
+/// // https://github.com/rust-ndarray/ndarray-linalg/issues/171
+/// // This means i needed gcc-fortran on my archlinux as well
+///
+/// let x = matrixA.solve_into(vectorB).unwrap();
+///
+/// approx::assert_relative_eq!(302_f64, x[0], max_relative=0.01);
+/// approx::assert_relative_eq!(309.5_f64, x[1], max_relative=0.01);
+/// approx::assert_relative_eq!(288.1_f64, x[2], max_relative=0.01);
 /// 
 ///
 /// ```
