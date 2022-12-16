@@ -15,23 +15,36 @@ mod sandbox_therminol_dowtherm_pipes {
     /// (2) let the mutable inlet temperature and outlet temperautre
     /// vectors be a a part of the struct, same goes for the calculator
     ///
+    ///
     /// (3) index numbers and vectors to keep track of inlet and outlet
-    /// temperatures seems pretty okay!
+    /// temperatures seems pretty okay! --> (no change needed)
+    ///
+    ///
     ///
     /// (4) setting inlet and outlet temperatures should be the same
     /// step
     ///
+    ///
+    ///
     /// (5) use usize instead of i32 to index vectors, though i32 
-    /// can be readily converted into usize. (changed 1128 hrs 16 Dec 2022)
+    /// can be readily converted into usize. --> (changed 1128 hrs 16 Dec 2022)
+    ///
+    ///
     ///
     /// (6) power, massfow and work done vectors can be initiated in the struct
     /// as well
+    ///
+    ///
     /// 
     /// (7) we can set a global timestep and global time in our 
     /// struct
     ///
+    ///
+    ///
     /// (8) we may want to have get and set methods for power/work done
     /// and mass flow
+    ///
+    ///
     ///
     /// for future consideration:
     ///
@@ -271,7 +284,7 @@ mod sandbox_therminol_dowtherm_pipes {
         // one for work done on fluid
         //
         use crate::ControlVolumeCalculations::ExplictCalculations::
-            ExplicitCalculationSteps;
+            v1_ExplicitCalculationSteps;
 
         impl HeatFluxPipeFactory {
 
@@ -690,7 +703,271 @@ use fluid_mechanics_rust::therminol_component::
 dowtherm_a_properties;
 
 
+#[derive(Clone)]
+pub struct v2_IterativeHeatFluxTherminolPipe {
+    pub fluid_parameters: FluidEntityThermophysicalData,
+}
 
+impl FluidEntityInitialisationSteps for v2_IterativeHeatFluxTherminolPipe {
+    /// step zero, here we set our initial conditions
+
+    fn step_0_set_timestep_and_initial_temperatures(
+        &mut self,
+        timestep: Time,
+        initial_global_temp: ThermodynamicTemperature,
+        fluid_volume: Volume,
+        fluid_entity_index: usize) -> Self {
+
+        FluidEntityThermophysicalData::
+            step_0_set_timestep_and_initial_temperatures(
+                &mut self.fluid_parameters, 
+                timestep, 
+                initial_global_temp, 
+                fluid_volume, 
+                fluid_entity_index
+                );
+
+        return self.clone();
+    }
+    
+
+    fn step_1_connect_to_component_inlet(
+        &mut self,
+        other_fluid_entity: &mut Self) {
+
+        FluidEntityThermophysicalData::
+            step_1_connect_to_component_inlet(
+                &mut self.fluid_parameters, 
+                &mut other_fluid_entity.fluid_parameters);
+    }
+
+    fn step_2_conenct_to_component_outlet(
+         &mut self,
+         other_fluid_entity: &mut Self){
+
+        FluidEntityThermophysicalData::
+            step_2_conenct_to_component_outlet(
+                &mut self.fluid_parameters, 
+                &mut other_fluid_entity.fluid_parameters);
+
+    }
+
+    fn step_3_add_component_to_vector(
+        &mut self,
+        fluid_entity_vector: &mut Vec<FluidEntityThermophysicalData>){
+
+        FluidEntityThermophysicalData::
+            step_3_add_component_to_vector(
+                &mut self.fluid_parameters, 
+                fluid_entity_vector);
+    }
+}
+
+impl v2_ExplicitCalculationSteps for v2_IterativeHeatFluxTherminolPipe {
+    fn step_1_calculate_current_timestep_temp_enthalpies(
+        &mut self) {
+        // first let's get the temperatures
+        // for the "old" inlet and outlet,
+        // by old here i mean current timestep
+        let current_inlet_temp = 
+            self.fluid_parameters.temperature_data.
+            inlet_temp_old.clone();
+
+        let current_outlet_temp = 
+            self.fluid_parameters.temperature_data.
+            outlet_temp_old.clone();
+
+        // now i want to find the average temperature
+        // of these temperatures
+        // ie T_fluid = (T_in + T_out)/2
+        let current_bulk_temp_value_kelvin = 
+            (current_inlet_temp.value 
+             + current_outlet_temp.value)/2.0;
+
+        let current_bulk_temp = 
+            ThermodynamicTemperature::new::<
+            thermodynamic_temperature::kelvin>
+            (current_bulk_temp_value_kelvin);
+
+        self.fluid_parameters.temperature_data.
+            fluid_temp_old = 
+            current_bulk_temp.clone();
+
+        // with these values let's find the enthalpies
+        self.fluid_parameters.enthalpy_data.
+            inlet_enthalpy_old = 
+            v1_IterativeHeatFluxTherminolPipe::
+            enthalpy(current_inlet_temp);
+
+        self.fluid_parameters.enthalpy_data.
+            outlet_enthalpy_old = 
+            v1_IterativeHeatFluxTherminolPipe::
+            enthalpy(current_outlet_temp);
+
+        self.fluid_parameters.enthalpy_data.
+            fluid_enthalpy_old =
+            v1_IterativeHeatFluxTherminolPipe::
+            enthalpy(current_bulk_temp);
+    }
+
+    /// we are calculating
+    ///
+    /// h_new = h_old + delta T * 
+    /// (H_in - H_out + Q + W)
+    ///
+    /// the fluid properties except for enthalpy
+    /// are calculated at T_fluid = (T_in - T_out)/2
+    ///
+    ///
+    /// fluid enthalpy wise, we assume perfect mixing
+    /// which means the bulk temperature of the pipe is
+    /// the same as the exit temperature
+    fn step_2_calculate_new_outlet_enthalpy(
+        &mut self, 
+        heat_supplied_to_fluid: Power,
+        work_done_on_fluid: Power,
+        timestep: Time,
+        fluid_mass_flowrate: MassRate){
+
+        // first let's calculate H_in
+
+        let enthalpy_flowrate_in = 
+            fluid_mass_flowrate *
+            self.fluid_parameters.
+            enthalpy_data.inlet_enthalpy_old.clone();
+            
+        // second let's calculate H_out
+
+        let enthalpy_flowrate_out = 
+            fluid_mass_flowrate *
+            self.fluid_parameters.
+            enthalpy_data.outlet_enthalpy_old.clone();
+
+        // third let's calculate heat addition
+
+        let heat_addition : Energy = 
+            timestep *
+            (enthalpy_flowrate_in - enthalpy_flowrate_out 
+             + heat_supplied_to_fluid 
+             + work_done_on_fluid);
+
+        // fourth, let's calculate the new system enthalpy
+        // for this, we need the current of the control
+        // volume times specific enthalpy
+
+        let control_volume_mass : Mass = 
+            v1_IterativeHeatFluxTherminolPipe::density(
+                self.fluid_parameters.temperature_data.
+                fluid_temp_old)*
+            self.fluid_parameters.fluid_volume;
+
+        let h_old : Energy = 
+            control_volume_mass *
+            self.fluid_parameters.enthalpy_data.
+            outlet_enthalpy_old;
+
+        let h_new : Energy = 
+            h_old + heat_addition;
+
+        // fifth, assuming mass does not change much
+        // we can find the new outlet specifc enthalpy
+
+        let new_fluid_specifc_enthalpy : AvailableEnergy 
+            = h_new/control_volume_mass;
+
+        self.fluid_parameters.enthalpy_data.
+            outlet_enthalpy_new = new_fluid_specifc_enthalpy;
+
+        // and that's it!
+    }
+
+    /// This step calculates the new system temperature
+    /// from system specific enthalpy estimates
+    fn step_3_calculate_new_outlet_temperature(
+        &mut self) -> ThermodynamicTemperature {
+
+        let new_outlet_fluid_temp : ThermodynamicTemperature
+            = v1_IterativeHeatFluxTherminolPipe::
+            get_temperature_from_enthalpy(
+                self.fluid_parameters.enthalpy_data.
+                outlet_enthalpy_new);
+
+        self.fluid_parameters.temperature_data.
+            outlet_temp_new = 
+            new_outlet_fluid_temp.clone();
+
+        return new_outlet_fluid_temp;
+    }
+
+    /// This step assumes that the new inlet temperature
+    /// has been calculated, and sets the new inlet
+    /// temperature as such
+    fn step_4_set_inlet_temperature(
+        &mut self,
+        new_inlet_temperature : ThermodynamicTemperature) {
+
+        self.fluid_parameters.temperature_data.
+            inlet_temp_new = new_inlet_temperature;
+
+    }
+
+    /// This step assumes that the new outlet temperature
+    /// has been calculated, and sets the new outlet
+    /// temperature as such
+    fn step_5_set_outlet_temperature(
+        &mut self,
+        new_outlet_temperature : ThermodynamicTemperature) {
+
+        self.fluid_parameters.temperature_data.
+            outlet_temp_new = new_outlet_temperature;
+
+    }
+
+
+    /// Assuming all new temperatures have been calculated
+    /// one can update set the old temperatures
+    /// to the new ones at the next timestep
+    fn step_6_update_current_timestep_temperatures(
+        &mut self) {
+
+        // set inlet and outlet temperatures
+        self.fluid_parameters.temperature_data.
+            inlet_temp_old =
+            self.fluid_parameters.temperature_data.
+            inlet_temp_new.clone();
+
+        self.fluid_parameters.temperature_data.
+            fluid_temp_old =
+            self.fluid_parameters.temperature_data.
+            fluid_temp_new.clone();
+
+
+        // set new fluid temperature to average
+        // of new inlet and outlet temperatures
+
+        let new_fluid_temp_value =
+            (self.fluid_parameters.temperature_data.
+            inlet_temp_new.value + 
+            self.fluid_parameters.temperature_data.
+            outlet_temp_new.value)/2.0;
+
+        self.fluid_parameters.temperature_data.
+            fluid_temp_new = 
+            ThermodynamicTemperature::new::
+            <kelvin>(new_fluid_temp_value);
+
+
+        self.fluid_parameters.temperature_data.
+            outlet_temp_old =
+            self.fluid_parameters.temperature_data.
+            outlet_temp_new.clone();
+
+    }
+}
+use crate::ControlVolumeCalculations::TherminolDowthermPipes::
+TherminolFluidProperties;
+impl TherminolFluidProperties for v2_IterativeHeatFluxTherminolPipe {
+}
 
 /// This struct or class represents a fixed heat
 /// flux therminol pipe, or at least the first version
@@ -725,7 +1002,7 @@ dowtherm_a_properties;
 /// let fluid_volume = Volume::new::<cubic_meter>(
 /// 0.01_f64.powf(3_f64));
 ///
-/// let mut fluid_entity_index: i32 = 1;
+/// let mut fluid_entity_index: usize = 1;
 ///
 /// // we are now going to initialise stuff
 ///
@@ -827,7 +1104,7 @@ dowtherm_a_properties;
 /// // let's begin step 1 of calculation procedure
 ///
 /// use crate::heat_transfer_rust::ControlVolumeCalculations::
-/// ExplictCalculations::ExplicitCalculationSteps;
+/// ExplictCalculations::v1_ExplicitCalculationSteps;
 ///
 ///
 /// pipe1.step_1_calculate_current_timestep_temp_enthalpies();
@@ -1069,7 +1346,7 @@ impl v1_IterativeHeatFluxTherminolPipe {
     /// let fluid_volume = Volume::new::<cubic_meter>(
     /// 0.01_f64.powf(3_f64));
     ///
-    /// let fluid_entity_index: i32 = 4;
+    /// let fluid_entity_index: usize = 4;
     ///
     /// // we are now going to initialise stuff
     ///
@@ -1214,7 +1491,7 @@ impl FluidEntityInitialisationSteps for v1_IterativeHeatFluxTherminolPipe {
     }
 }
 
-impl ExplicitCalculationSteps for v1_IterativeHeatFluxTherminolPipe {
+impl v1_ExplicitCalculationSteps for v1_IterativeHeatFluxTherminolPipe {
     fn step_1_calculate_current_timestep_temp_enthalpies(
         &mut self) {
         // first let's get the temperatures
@@ -1414,7 +1691,5 @@ impl ExplicitCalculationSteps for v1_IterativeHeatFluxTherminolPipe {
 
     }
 }
-use crate::ControlVolumeCalculations::TherminolDowthermPipes::
-TherminolFluidProperties;
 impl TherminolFluidProperties for v1_IterativeHeatFluxTherminolPipe {
 }
