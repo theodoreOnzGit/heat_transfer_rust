@@ -18,6 +18,8 @@ pub struct FluidEntityCollectionV1 {
     pub work_input_vec: Vec<Power>,
     pub mass_flowrate_vec: Vec<MassRate>,
 
+    pub component_name_vec: Vec<String>,
+
     pub timestep: Time,
     pub initial_global_temp: ThermodynamicTemperature,
 
@@ -39,6 +41,7 @@ impl FluidEntityCollectionV1 {
             heat_input_vec: vec![], 
             work_input_vec: vec![], 
             mass_flowrate_vec: vec![], 
+            component_name_vec: vec![],
 
             /// Default timestep is 0.1s
             timestep: Time::new::<second>(0.1),
@@ -49,7 +52,7 @@ impl FluidEntityCollectionV1 {
 
     }
 
-    pub fn step_0_set_timestep_and_initial_temp(
+    pub fn setup_step_0_set_timestep_and_initial_temp(
         &mut self,
         timestep: Time,
         initial_global_temp: ThermodynamicTemperature) {
@@ -61,10 +64,14 @@ impl FluidEntityCollectionV1 {
 
 
     /// Adds a new fluid component or fluid entity
-    pub fn step_1_add_new_component(
+    pub fn setup_step_1_add_new_component(
         &mut self,
+        name: String,
         fluid_volume: Volume
         ) {
+
+        // first let me push the name of the fluid entity up
+        self.component_name_vec.push(name);
 
         let mut new_pipe = v2_IterativeHeatFluxTherminolPipe::new();
 
@@ -98,7 +105,207 @@ impl FluidEntityCollectionV1 {
         self.mass_flowrate_vec.push(
             MassRate::new::<kilogram_per_second>(0.0));
 
+        return;
+
     }
+
+    /// setup step : connect inlet and outlet of pipe
+    pub fn setup_step_2_connect_inlet_and_outlet_pipe(
+        &mut self,
+        connect_to_pipe_outlet_index: usize,
+        connect_to_pipe_inlet_index: usize){
+
+
+        // Basically in this function, i cannot use borrow
+        // two mutable versions of the component vector and then
+        // change values in them
+        // i have to make a copy of the front and back pipe
+        // and then use those to perform the value changes
+        // the other way of course, is to change the value indices manually
+
+
+        let mut pipe_back = 
+            self.fluid_entity_vector[connect_to_pipe_outlet_index].clone();
+
+        let mut pipe_front = 
+            self.fluid_entity_vector[connect_to_pipe_inlet_index].clone();
+
+        pipe_front.step_1_connect_to_component_inlet(
+            &mut self.fluid_entity_vector[connect_to_pipe_outlet_index]);
+
+        pipe_back.step_2_conenct_to_component_outlet(
+            &mut self.fluid_entity_vector[connect_to_pipe_inlet_index]);
+
+    }
+
+    /// Step 2: set mass flowrate for a component with 
+    /// index i
+    pub fn step_2_set_mass_flowrate(
+        &mut self,
+        mass_flowrate: MassRate,
+        component_index: usize){
+
+        self.mass_flowrate_vec[component_index] = mass_flowrate.clone();
+    }
+
+    /// Step 3: set work input vector for component with 
+    /// index i
+    pub fn step_3_set_work_input(
+        &mut self,
+        work_input: Power,
+        component_index: usize){
+
+        self.work_input_vec[component_index] = work_input.clone();
+    }
+
+    /// Step 4: set heat input vector for component with 
+    /// index i
+    pub fn step_4_set_heat_input(
+        &mut self,
+        heat_input: Power,
+        component_index: usize){
+
+        self.heat_input_vec[component_index] = heat_input.clone();
+    }
+
+    /// Step 5: calculate outlet enthalpy
+    /// in a serial manner (not worrying about parallel
+    /// computation with rayon yet)
+    pub fn step_5_calculate_all_outlet_enthalpies_and_temperatures(
+        &mut self) {
+
+        // start the for loop
+        let max_vec_index_plus_one = 
+            self.fluid_entity_vector.len();
+
+        for i in 0..max_vec_index_plus_one {
+
+            let heat_input_into_fluid : Power = 
+                self.heat_input_vec[i];
+
+            let work_done_on_fluid : Power = 
+                self.work_input_vec[i];
+
+            let mass_flowrate: MassRate = 
+                self.mass_flowrate_vec[i];
+
+            self.fluid_entity_vector[i].
+                step_2_calculate_new_outlet_enthalpy(
+                    heat_input_into_fluid,
+                    work_done_on_fluid,
+                    self.timestep,
+                    mass_flowrate);
+
+            self.fluid_entity_vector[i].
+                step_3_calculate_new_outlet_temperature();
+        }
+        return;
+
+    }
+
+    /// Step 6: calculate inlet temperatures and assign them
+    /// to appropriate vectors
+    pub fn step_6_calculate_inlet_temperatures(
+        &mut self){
+
+        // first let's clear up the inlet and outlet temp vector
+
+        self.inlet_temp_vec.clear();
+        self.outlet_temp_vec.clear();
+        // now let's update all the outlet temperatures
+
+        let max_vec_index_plus_one = 
+            self.fluid_entity_vector.len();
+
+        // first we update the outlet temp vector
+
+        for i in 0..max_vec_index_plus_one {
+
+            // first let's obtain the outlet temperature
+            //
+            let fluid_component =
+                self.fluid_entity_vector[i].clone();
+
+            let fluid_component_outlet_temperature =
+                fluid_component.fluid_parameters.
+                temperature_data.outlet_temp_new;
+
+            // we'll introduce it into the vector
+
+            self.outlet_temp_vec.push(fluid_component_outlet_temperature);
+
+            // of course, we can set the outlet temperature here outright,
+            // but i'll leave it for later
+
+
+        }
+
+
+        // now we update the inlet temp vector
+        //
+        for i in 0.. max_vec_index_plus_one {
+
+            let fluid_component =
+                self.fluid_entity_vector[i].clone();
+
+            let fluid_component_inlet_index: usize = 
+                fluid_component.fluid_parameters.
+                index_data.inlet_fluid_entity_index;
+
+            // second, we get the outlet temperature of the fluid
+            // component connected to the back of this fluid
+            // component
+            //
+            // This is actually the inlet temperature
+
+            let fluid_component_inlet_temperature =
+                self.outlet_temp_vec[fluid_component_inlet_index];
+
+            // third, let's push this temperature to
+            // the inlet temperature vector
+
+            self.inlet_temp_vec.push(fluid_component_inlet_temperature);
+
+        }
+
+
+        // now we update the inlet and outlet temperatures
+        // of each object
+        //
+
+        for i in 0..max_vec_index_plus_one {
+
+            self.fluid_entity_vector[i].fluid_parameters.
+                temperature_data.inlet_temp_new 
+                = self.inlet_temp_vec[i].clone();
+
+            self.fluid_entity_vector[i].fluid_parameters.
+                temperature_data.outlet_temp_new =
+                self.outlet_temp_vec[i].clone();
+        }
+
+        // and we are done!
+        return;
+
+    }
+
+
+    /// Step 7: Advance timestep
+    /// means i set the old temperature values to that of the new
+    /// temperature
+    pub fn step_7_advance_timestep(
+        &mut self){
+
+        let max_vec_index_plus_one = 
+            self.fluid_entity_vector.len();
+
+        for i in 0..max_vec_index_plus_one {
+            self.fluid_entity_vector[i].
+                step_6_update_current_timestep_temperatures();
+        }
+    }
+
+
 }
 
 /// For explicit calculations in general

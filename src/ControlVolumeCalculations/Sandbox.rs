@@ -56,6 +56,8 @@ mod sandbox_therminol_dowtherm_pipes {
     ///
     /// (2) we might want to implement an ambient .cool() function
     /// in order to represent heat loss to environment
+    ///
+    /// (3) bidirectional flow...
     #[test]
     pub fn sandbox_autobuild_conenct_and_autocalculation() {
         extern crate approx;
@@ -941,6 +943,8 @@ impl v2_ExplicitCalculationSteps for v2_IterativeHeatFluxTherminolPipe {
     /// fluid enthalpy wise, we assume perfect mixing
     /// which means the bulk temperature of the pipe is
     /// the same as the exit temperature
+    ///
+    /// I haven't quite calculated bidirectional flow yet
     fn step_2_calculate_new_outlet_enthalpy(
         &mut self, 
         heat_supplied_to_fluid: Power,
@@ -994,6 +998,13 @@ impl v2_ExplicitCalculationSteps for v2_IterativeHeatFluxTherminolPipe {
         let new_fluid_specifc_enthalpy : AvailableEnergy 
             = h_new/control_volume_mass;
 
+        // now we set the new outlet enthalpy,
+        // note that if we want to do a bidirectional flow,
+        // we need to do an if else loop here
+        // that means, 3 cases
+        // what to do if mass flow is +ve,
+        // then -ve
+        // then 0
         self.fluid_parameters.enthalpy_data.
             outlet_enthalpy_new = new_fluid_specifc_enthalpy;
 
