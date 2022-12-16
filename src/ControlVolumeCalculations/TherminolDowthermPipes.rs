@@ -633,6 +633,71 @@ mod sandbox_therminol_dowtherm_pipes {
 
                 // end of function
             }
+
+            pub fn step_2_calculate_new_system_enthalpy(
+                &self,
+                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>,
+                heat_input_vec: Vec<Power>,
+                work_input_vec: Vec<Power>,
+                mass_flowrate_vec: Vec<MassRate>,
+                timestep: Time) {
+
+                // start function
+                
+                let max_vec_index = 
+                    generic_component_vec.len() - 1;
+
+                for i in 0..max_vec_index {
+
+                    // first let's get the heat rate:
+                    //
+                    let heat_input_into_fluid : Power = 
+                        heat_input_vec[i];
+
+                    // now work done rate:
+
+                    let work_input_into_fluid : Power = 
+                        work_input_vec[i];
+
+                    // now mass flowrate:
+                    //
+
+                    let mass_flowrate: MassRate = 
+                        mass_flowrate_vec[i];
+
+
+
+
+                    generic_component_vec[i].
+                        step_2_calculate_new_system_enthalpy(
+                            heat_input_into_fluid,
+                            work_input_into_fluid,
+                            timestep,
+                            mass_flowrate);
+
+                }
+
+                // end of function
+            }
+
+            pub fn step_3_calculate_new_system_temperature(
+                &mut self,
+                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>){
+
+
+                let max_vec_index = 
+                    generic_component_vec.len() - 1;
+
+                for i in 0..max_vec_index {
+                    generic_component_vec[i].
+                        step_3_calculate_new_system_temperature();
+
+                }
+
+
+
+            }
+
         }
 
         // we can then use this function to help us with step 1
@@ -641,6 +706,62 @@ mod sandbox_therminol_dowtherm_pipes {
         factory_obj.step_1_calculate_current_timestep_temp_enthalpies(
             &mut therminolPipeVec);
 
+        // now for calculation
+        let timestep : Time = pipe1.fluid_parameters.timestep;
+
+        use uom::si::mass_rate::kilogram_per_second;
+
+        let mass_flowrate: MassRate = 
+            MassRate::new::<kilogram_per_second>(0.18);
+
+        use uom::si::power::watt;
+        
+        let pipe_1_heat = Power::new::<watt>(100_f64);
+        let pipe_2_heat = Power::new::<watt>(-20_f64);
+        let pipe_3_heat = Power::new::<watt>(-80_f64);
+        
+        let work_done_on_pipe_rate = Power::new::<watt>(0_f64);
+
+        // let's construct the vectors
+        //
+
+        let mut heat_input_vec : Vec<Power> =
+            vec![];
+
+        let mut work_input_vec : Vec<Power> =
+            vec![];
+
+        let mut mass_flowrate_vec: Vec<MassRate> = 
+            vec![];
+
+        // push values into vector
+
+        heat_input_vec.push(pipe_1_heat);
+        heat_input_vec.push(pipe_2_heat);
+        heat_input_vec.push(pipe_3_heat);
+
+        work_input_vec.push(work_done_on_pipe_rate);
+        work_input_vec.push(work_done_on_pipe_rate);
+        work_input_vec.push(work_done_on_pipe_rate);
+
+        mass_flowrate_vec.push(mass_flowrate);
+        mass_flowrate_vec.push(mass_flowrate);
+        mass_flowrate_vec.push(mass_flowrate);
+
+
+        // next thing, complete step 2
+
+        factory_obj.step_2_calculate_new_system_enthalpy(
+            &mut therminolPipeVec,
+            heat_input_vec,
+            work_input_vec,
+            mass_flowrate_vec,
+            timestep);
+
+        // step 3
+
+        factory_obj.step_3_calculate_new_system_temperature(
+            &mut therminolPipeVec);
 
 
 
