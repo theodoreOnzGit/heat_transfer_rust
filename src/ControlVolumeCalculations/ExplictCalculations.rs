@@ -7,6 +7,115 @@ use uom::si::time::second;
 use uom::si::thermodynamic_temperature::kelvin;
 use uom::si::power::watt;
 
+#[cfg(test)]
+mod explicit_calc_sandbox {
+    #[test]
+    pub fn test_FluidEntityCollectionV1(){
+
+        extern crate approx;
+
+        use crate::ControlVolumeCalculations::Sandbox::
+            v2_IterativeHeatFluxTherminolPipe;
+
+        use crate:: ControlVolumeCalculations::FluidEntity_StructsAndTraits::
+            FluidEntityInitialisationSteps;
+
+        use uom::si::f64::*;
+        use uom::si::time::second;
+        use uom::si::thermodynamic_temperature::kelvin;
+        use uom::si::volume::cubic_meter;
+
+
+        let timestep = Time::new::<second>(0.1_f64);
+        let initial_global_temp = ThermodynamicTemperature::
+            new::<kelvin>(300_f64);
+        let fluid_volume = Volume::new::<cubic_meter>(
+            0.01_f64.powf(3_f64));
+
+        use crate::ControlVolumeCalculations::ExplictCalculations::
+            FluidEntityCollectionV1;
+
+        // instantiate a new fluid entity collection object
+        let mut fluid_entity_collection_obj = 
+            FluidEntityCollectionV1::new();
+
+        // initiate timestep and global initial temp
+
+        fluid_entity_collection_obj.setup_step_0_set_timestep_and_initial_temp(
+            timestep, 
+            initial_global_temp);
+
+        // then we add pipe 1, pipe 2 and pipe 3
+
+        // index 0
+        fluid_entity_collection_obj.setup_step_1_add_new_component(
+            "pipe1".to_string(), 
+            fluid_volume);
+
+        // index 1
+        fluid_entity_collection_obj.setup_step_1_add_new_component(
+            "pipe2".to_string(), 
+            fluid_volume);
+
+        // index 2
+        fluid_entity_collection_obj.setup_step_1_add_new_component(
+            "pipe3".to_string(), 
+            fluid_volume);
+
+        // now to connect the pipes in this fashion
+        // 1 -> 2 -> 3 
+        // and 3 connects back to 1 in a circular fashion
+
+        fluid_entity_collection_obj.
+            setup_step_2_connect_inlet_and_outlet_pipe(0, 1);
+
+        fluid_entity_collection_obj.
+            setup_step_2_connect_inlet_and_outlet_pipe(1, 2);
+
+        fluid_entity_collection_obj.
+            setup_step_2_connect_inlet_and_outlet_pipe(2, 0);
+
+
+        // if connected correctly, this should pass:
+        let pipe1 = fluid_entity_collection_obj.
+            fluid_entity_vector[0].clone();
+
+        assert_eq!(0, pipe1.fluid_parameters.index_data.fluid_entity_index);
+
+        assert_eq!(2, pipe1.fluid_parameters.index_data.
+                   inlet_fluid_entity_index);
+
+        assert_eq!(1, pipe1.fluid_parameters.index_data.
+                   outlet_fluid_entity_index);
+
+        let pipe2 = fluid_entity_collection_obj.
+            fluid_entity_vector[1].clone();
+
+        assert_eq!(1, pipe2.fluid_parameters.index_data.
+                   fluid_entity_index);
+
+        assert_eq!(0, pipe2.fluid_parameters.index_data.
+                   inlet_fluid_entity_index);
+
+        assert_eq!(2, pipe2.fluid_parameters.index_data.
+                   outlet_fluid_entity_index);
+
+        let pipe3 = fluid_entity_collection_obj.
+            fluid_entity_vector[2].clone();
+
+        assert_eq!(2, pipe3.fluid_parameters.index_data.
+                   fluid_entity_index);
+        assert_eq!(1, pipe3.fluid_parameters.index_data.
+                   inlet_fluid_entity_index);
+        assert_eq!(0, pipe3.fluid_parameters.index_data.
+                   outlet_fluid_entity_index);
+
+        
+    }
+
+}
+
+
 pub struct FluidEntityCollectionV1 {
 
     pub current_max_index: usize,
@@ -130,11 +239,12 @@ impl FluidEntityCollectionV1 {
         let mut pipe_front = 
             self.fluid_entity_vector[connect_to_pipe_inlet_index].clone();
 
-        pipe_front.step_1_connect_to_component_inlet(
-            &mut self.fluid_entity_vector[connect_to_pipe_outlet_index]);
+        self.fluid_entity_vector[connect_to_pipe_outlet_index].
+            step_2_conenct_to_component_outlet(&mut pipe_front);
 
-        pipe_back.step_2_conenct_to_component_outlet(
-            &mut self.fluid_entity_vector[connect_to_pipe_inlet_index]);
+        self.fluid_entity_vector[connect_to_pipe_inlet_index].
+            step_1_connect_to_component_inlet(&mut pipe_back);
+
 
     }
 

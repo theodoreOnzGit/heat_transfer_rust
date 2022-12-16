@@ -24,7 +24,7 @@ mod sandbox_therminol_dowtherm_pipes {
     ///
     ///
     /// (4) setting inlet and outlet temperatures should be the same
-    /// step
+    /// step 
     ///
     ///
     ///
