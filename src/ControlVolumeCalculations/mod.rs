@@ -65,3 +65,8 @@ pub mod TherminolDowthermPipes;
 /// Generic Fluid entities
 #[allow(non_snake_case)]
 pub mod FluidEntity_StructsAndTraits;
+
+/// This module just helps document the development process and sandboxing
+/// i have done
+#[allow(non_snake_case)]
+pub mod Sandbox;
