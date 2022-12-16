@@ -46,7 +46,7 @@ mod sandbox_therminol_dowtherm_pipes {
         extern crate approx;
 
         use crate::ControlVolumeCalculations::Sandbox::
-            FixedHeatFluxTherminolPipe;
+            v1_IterativeHeatFluxTherminolPipe;
 
         use crate:: ControlVolumeCalculations::FluidEntity_StructsAndTraits::
             FluidEntityInitialisationSteps;
@@ -73,9 +73,9 @@ mod sandbox_therminol_dowtherm_pipes {
         // so i will have 3 vectors,
         // one vector for inlet temperatures
         // one vector for outlet temperatures
-        // one vector for all the FixedHeatFluxTherminolPipe
+        // one vector for all the v1_IterativeHeatFluxTherminolPipe
 
-        let mut therminolPipeVec: Vec<FixedHeatFluxTherminolPipe> 
+        let mut therminolPipeVec: Vec<v1_IterativeHeatFluxTherminolPipe> 
             = vec![];
 
         let mut inlet_temp_vec: Vec<ThermodynamicTemperature>
@@ -101,12 +101,12 @@ mod sandbox_therminol_dowtherm_pipes {
                 timestep: Time,
                 initial_global_temp: ThermodynamicTemperature,
                 fluid_volume: Volume,
-                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>,
+                generic_component_vec: &mut Vec<v1_IterativeHeatFluxTherminolPipe>,
                 inlet_temp_vec: &mut Vec<ThermodynamicTemperature>,
                 outlet_temp_vec: &mut Vec<ThermodynamicTemperature>
                 ) {
 
-                let mut new_pipe = FixedHeatFluxTherminolPipe::new();
+                let mut new_pipe = v1_IterativeHeatFluxTherminolPipe::new();
 
                 let fluid_entity_index = self.current_max_index;
 
@@ -178,7 +178,7 @@ mod sandbox_therminol_dowtherm_pipes {
                 &self,
                 connect_to_pipe_outlet_index: usize,
                 connect_to_pipe_inlet_index: usize,
-                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>){
+                generic_component_vec: &mut Vec<v1_IterativeHeatFluxTherminolPipe>){
 
 
                 // Basically in this function, i cannot use borrow
@@ -276,7 +276,7 @@ mod sandbox_therminol_dowtherm_pipes {
         impl HeatFluxPipeFactory {
 
             pub fn step_1_calculate_current_timestep_temp_enthalpies(&self,
-                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>){
+                generic_component_vec: &mut Vec<v1_IterativeHeatFluxTherminolPipe>){
 
                 // start function
 
@@ -295,7 +295,7 @@ mod sandbox_therminol_dowtherm_pipes {
 
             pub fn step_2_calculate_new_system_enthalpy(
                 &self,
-                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>,
+                generic_component_vec: &mut Vec<v1_IterativeHeatFluxTherminolPipe>,
                 heat_input_vec: Vec<Power>,
                 work_input_vec: Vec<Power>,
                 mass_flowrate_vec: Vec<MassRate>,
@@ -341,7 +341,7 @@ mod sandbox_therminol_dowtherm_pipes {
 
             pub fn step_3_calculate_new_system_temperature(
                 &mut self,
-                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>){
+                generic_component_vec: &mut Vec<v1_IterativeHeatFluxTherminolPipe>){
 
 
                 let max_vec_index = 
@@ -424,7 +424,7 @@ mod sandbox_therminol_dowtherm_pipes {
 
 
         // now at this point, there is still some correction to 
-        // make with the FixedHeatFluxTherminolPipe
+        // make with the v1_IterativeHeatFluxTherminolPipe
         //
         // since the enthalpy balances do not corroborate well
         // 
@@ -438,7 +438,7 @@ mod sandbox_therminol_dowtherm_pipes {
 
             pub fn step_4_set_inlet_temperature(
                 &mut self,
-                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>,
+                generic_component_vec: &mut Vec<v1_IterativeHeatFluxTherminolPipe>,
                 inlet_temp_vec: &mut Vec<ThermodynamicTemperature>,
                 outlet_temp_vec: &mut Vec<ThermodynamicTemperature>){
 
@@ -524,7 +524,7 @@ mod sandbox_therminol_dowtherm_pipes {
 
             pub fn step_5_set_outlet_temperature(
                 &mut self,
-                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>,
+                generic_component_vec: &mut Vec<v1_IterativeHeatFluxTherminolPipe>,
                 outlet_temp_vec: &mut Vec<ThermodynamicTemperature>){
 
                 let max_vec_index = 
@@ -606,7 +606,7 @@ mod sandbox_therminol_dowtherm_pipes {
             
             pub fn step_6_update_current_timestep_temperatures(
                 &mut self,
-                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>){
+                generic_component_vec: &mut Vec<v1_IterativeHeatFluxTherminolPipe>){
 
 
                 let max_vec_index = 
@@ -727,7 +727,7 @@ dowtherm_a_properties;
 /// use heat_transfer_rust::ControlVolumeCalculations::
 /// FluidEntity_StructsAndTraits::FluidEntityInitialisationSteps;
 ///
-/// let mut pipe1 = FixedHeatFluxTherminolPipe::new();
+/// let mut pipe1 = v1_IterativeHeatFluxTherminolPipe::new();
 ///
 /// pipe1.step_0_set_timestep_and_initial_temperatures(
 /// timestep,
@@ -737,7 +737,7 @@ dowtherm_a_properties;
 ///
 /// // now suppose there are 3 pipes and i want to connect them
 ///
-/// let mut pipe2 = FixedHeatFluxTherminolPipe::new();
+/// let mut pipe2 = v1_IterativeHeatFluxTherminolPipe::new();
 ///
 /// pipe2.step_0_set_timestep_and_initial_temperatures(
 /// timestep,
@@ -745,7 +745,7 @@ dowtherm_a_properties;
 /// fluid_volume,
 /// 2);
 ///
-/// let mut pipe3 = FixedHeatFluxTherminolPipe::new();
+/// let mut pipe3 = v1_IterativeHeatFluxTherminolPipe::new();
 ///
 /// pipe3.step_0_set_timestep_and_initial_temperatures(
 /// timestep,
@@ -1035,10 +1035,10 @@ dowtherm_a_properties;
 ///
 ///
 #[derive(Clone)]
-pub struct FixedHeatFluxTherminolPipe {
+pub struct v1_IterativeHeatFluxTherminolPipe {
     pub fluid_parameters: FluidEntityThermophysicalData,
 }
-impl FixedHeatFluxTherminolPipe {
+impl v1_IterativeHeatFluxTherminolPipe {
 
     /// Constructor which creates the structure 
     /// ```rust
@@ -1046,6 +1046,8 @@ impl FixedHeatFluxTherminolPipe {
     /// extern crate approx;
     /// use heat_transfer_rust::ControlVolumeCalculations::
     /// TherminolDowthermPipes::*;
+    /// use heat_transfer_rust::ControlVolumeCalculations::
+    /// Sandbox::*;
     ///
     /// use uom::si::f64::*;
     /// use uom::si::time::second;
@@ -1069,7 +1071,7 @@ impl FixedHeatFluxTherminolPipe {
     /// use heat_transfer_rust::ControlVolumeCalculations::
     /// FluidEntity_StructsAndTraits::FluidEntityInitialisationSteps;
     ///
-    /// let mut pipe1 = FixedHeatFluxTherminolPipe::new();
+    /// let mut pipe1 = v1_IterativeHeatFluxTherminolPipe::new();
     ///
     /// pipe1.step_0_set_timestep_and_initial_temperatures(
     /// timestep,
@@ -1152,7 +1154,7 @@ impl FixedHeatFluxTherminolPipe {
     }
 }
 
-impl FluidEntityInitialisationSteps for FixedHeatFluxTherminolPipe {
+impl FluidEntityInitialisationSteps for v1_IterativeHeatFluxTherminolPipe {
     /// step zero, essentially the constructor
 
     fn step_0_set_timestep_and_initial_temperatures(
@@ -1207,7 +1209,7 @@ impl FluidEntityInitialisationSteps for FixedHeatFluxTherminolPipe {
     }
 }
 
-impl ExplicitCalculationSteps for FixedHeatFluxTherminolPipe {
+impl ExplicitCalculationSteps for v1_IterativeHeatFluxTherminolPipe {
     fn step_1_calculate_current_timestep_temp_enthalpies(
         &mut self) {
         // first let's get the temperatures
@@ -1239,17 +1241,17 @@ impl ExplicitCalculationSteps for FixedHeatFluxTherminolPipe {
         // with these values let's find the enthalpies
         self.fluid_parameters.enthalpy_data.
             inlet_enthalpy_old = 
-            FixedHeatFluxTherminolPipe::
+            v1_IterativeHeatFluxTherminolPipe::
             enthalpy(current_inlet_temp);
 
         self.fluid_parameters.enthalpy_data.
             outlet_enthalpy_old = 
-            FixedHeatFluxTherminolPipe::
+            v1_IterativeHeatFluxTherminolPipe::
             enthalpy(current_outlet_temp);
 
         self.fluid_parameters.enthalpy_data.
             fluid_enthalpy_old =
-            FixedHeatFluxTherminolPipe::
+            v1_IterativeHeatFluxTherminolPipe::
             enthalpy(current_bulk_temp);
     }
 
@@ -1299,7 +1301,7 @@ impl ExplicitCalculationSteps for FixedHeatFluxTherminolPipe {
         // volume times specific enthalpy
 
         let control_volume_mass : Mass = 
-            FixedHeatFluxTherminolPipe::density(
+            v1_IterativeHeatFluxTherminolPipe::density(
                 self.fluid_parameters.temperature_data.
                 fluid_temp_old)*
             self.fluid_parameters.fluid_volume;
@@ -1330,7 +1332,7 @@ impl ExplicitCalculationSteps for FixedHeatFluxTherminolPipe {
         &mut self) -> ThermodynamicTemperature {
 
         let new_fluid_temp_average : ThermodynamicTemperature
-            = FixedHeatFluxTherminolPipe::
+            = v1_IterativeHeatFluxTherminolPipe::
             get_temperature_from_enthalpy(
                 self.fluid_parameters.enthalpy_data.
                 fluid_enthalpy_new);
@@ -1409,5 +1411,5 @@ impl ExplicitCalculationSteps for FixedHeatFluxTherminolPipe {
 }
 use crate::ControlVolumeCalculations::TherminolDowthermPipes::
 TherminolFluidProperties;
-impl TherminolFluidProperties for FixedHeatFluxTherminolPipe {
+impl TherminolFluidProperties for v1_IterativeHeatFluxTherminolPipe {
 }
