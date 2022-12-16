@@ -942,6 +942,69 @@ mod sandbox_therminol_dowtherm_pipes {
             temp_3_val,
             pipe1.fluid_parameters.temperature_data.inlet_temp_new.value,
             max_relative=0.01);
+
+        impl HeatFluxPipeFactory {
+            
+            pub fn step_6_update_current_timestep_temperatures(
+                &mut self,
+                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>){
+
+
+                let max_vec_index = 
+                    generic_component_vec.len() - 1;
+
+                for i in 0..=max_vec_index {
+                    generic_component_vec[i].
+                        step_6_update_current_timestep_temperatures();
+
+                }
+
+                return;
+            }
+
+            // end of impl
+        }
+
+        // now we change the old temperature data (from last timestep)
+        // to the new temperature data (current timestep)
+        factory_obj.step_6_update_current_timestep_temperatures(
+            &mut therminolPipeVec);
+
+        pipe1 = therminolPipeVec[0].clone();
+        pipe2 = therminolPipeVec[1].clone();
+        pipe3 = therminolPipeVec[2].clone();
+
+        approx::assert_relative_eq!(
+            temp_1_val,
+            pipe1.fluid_parameters.temperature_data.outlet_temp_old.value,
+            max_relative=0.01);
+
+        approx::assert_relative_eq!(
+            temp_2_val,
+            pipe2.fluid_parameters.temperature_data.outlet_temp_old.value,
+            max_relative=0.01);
+
+        approx::assert_relative_eq!(
+            temp_3_val,
+            pipe3.fluid_parameters.temperature_data.outlet_temp_old.value,
+            max_relative=0.01);
+
+        // likewise, let's assert the old inlet temperatures too
+
+        approx::assert_relative_eq!(
+            temp_1_val,
+            pipe2.fluid_parameters.temperature_data.inlet_temp_old.value,
+            max_relative=0.01);
+
+        approx::assert_relative_eq!(
+            temp_2_val,
+            pipe3.fluid_parameters.temperature_data.inlet_temp_old.value,
+            max_relative=0.01);
+
+        approx::assert_relative_eq!(
+            temp_3_val,
+            pipe1.fluid_parameters.temperature_data.inlet_temp_old.value,
+            max_relative=0.01);
     }
 
 }
