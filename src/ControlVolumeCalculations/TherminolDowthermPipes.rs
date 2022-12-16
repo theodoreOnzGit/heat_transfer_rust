@@ -624,7 +624,7 @@ mod sandbox_therminol_dowtherm_pipes {
                 let max_vec_index = 
                     generic_component_vec.len() - 1;
 
-                for i in 0..max_vec_index {
+                for i in 0..=max_vec_index {
                     generic_component_vec[i].
                         step_1_calculate_current_timestep_temp_enthalpies();
 
@@ -647,7 +647,7 @@ mod sandbox_therminol_dowtherm_pipes {
                 let max_vec_index = 
                     generic_component_vec.len() - 1;
 
-                for i in 0..max_vec_index {
+                for i in 0..=max_vec_index {
 
                     // first let's get the heat rate:
                     //
@@ -688,7 +688,7 @@ mod sandbox_therminol_dowtherm_pipes {
                 let max_vec_index = 
                     generic_component_vec.len() - 1;
 
-                for i in 0..max_vec_index {
+                for i in 0..=max_vec_index {
                     generic_component_vec[i].
                         step_3_calculate_new_system_temperature();
 
@@ -764,7 +764,184 @@ mod sandbox_therminol_dowtherm_pipes {
             &mut therminolPipeVec);
 
 
+        // now at this point, there is still some correction to 
+        // make with the FixedHeatFluxTherminolPipe
+        //
+        // since the enthalpy balances do not corroborate well
+        // 
+        // but the new fluid temperatures should now reflect
+        // the outlet temperatures of the pipes
+        // Hence, i will take the system temperatures of the 
+        // pipe and assign it appropriately to the vector of
+        // the outlet temperatures
 
+        impl HeatFluxPipeFactory {
+
+            pub fn step_4_set_inlet_temperature(
+                &mut self,
+                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>,
+                inlet_temp_vec: &mut Vec<ThermodynamicTemperature>,
+                outlet_temp_vec: &mut Vec<ThermodynamicTemperature>){
+
+                // first let's clear up the inlet and outlet temp vector
+
+                inlet_temp_vec.clear();
+                outlet_temp_vec.clear();
+
+                // now let's update all the outlet temperatures
+
+                let max_vec_index = 
+                    generic_component_vec.len() - 1;
+
+                for i in 0..=max_vec_index {
+                    
+                    // first let's obtain the outlet temperature
+                    //
+                    let fluid_component =
+                        generic_component_vec[i].clone();
+
+                    let fluid_component_outlet_temperature =
+                        fluid_component.fluid_parameters.
+                        temperature_data.fluid_temp_new;
+
+                    // we'll introduce it into the vector
+
+                    outlet_temp_vec.push(fluid_component_outlet_temperature);
+
+                    // of course, we can set the outlet temperature here outright,
+                    // but i'll leave it for later
+
+                }
+
+                // now that we've set the outlet temperature
+                // vectors, we can use the indexing within each object
+                // to assign them to the inlet temperatures
+
+                for i in 0..=max_vec_index {
+
+                    // first let's obtain the index
+                    // of the component connected to this component's
+                    // inlet
+                    
+                    let fluid_component =
+                        generic_component_vec[i].clone();
+
+                    let fluid_component_inlet_index : usize =
+                        fluid_component.fluid_parameters.
+                        index_data.inlet_fluid_entity_index
+                        .try_into().unwrap();
+
+                    // second, we get the outlet temperature of the fluid
+                    // component connected to the back of this fluid
+                    // component
+                    //
+                    // This is actually the inlet temperature
+
+                    let fluid_component_inlet_temperature =
+                        outlet_temp_vec[fluid_component_inlet_index];
+
+                    // third, let's push this temperature to
+                    // the inlet temperature vector
+
+                    inlet_temp_vec.push(fluid_component_inlet_temperature);
+
+                }
+
+                // now we have set both inlet and outlet temperature vectors,
+                // we can start assigning inlet temperatures
+
+                for i in 0..=max_vec_index {
+
+                    generic_component_vec[i].fluid_parameters.
+                        temperature_data.inlet_temp_new 
+                        = inlet_temp_vec[i].clone();
+
+                }
+
+                return;
+
+
+            }
+
+            pub fn step_5_set_outlet_temperature(
+                &mut self,
+                generic_component_vec: &mut Vec<FixedHeatFluxTherminolPipe>,
+                outlet_temp_vec: &mut Vec<ThermodynamicTemperature>){
+
+                let max_vec_index = 
+                    generic_component_vec.len() - 1;
+
+                for i in 0..=max_vec_index {
+
+                    generic_component_vec[i].fluid_parameters.
+                        temperature_data.outlet_temp_new =
+                        outlet_temp_vec[i].clone();
+
+                }
+
+                return;
+            }
+
+            // end of impl
+        }
+
+
+        factory_obj.step_4_set_inlet_temperature(
+            &mut therminolPipeVec,
+            &mut inlet_temp_vec,
+            &mut outlet_temp_vec);
+
+        factory_obj.step_5_set_outlet_temperature(
+            &mut therminolPipeVec,
+            &mut outlet_temp_vec);
+
+        // now let's do some asserts
+
+        let mut pipe1 = therminolPipeVec[0].clone();
+        let mut pipe2 = therminolPipeVec[1].clone();
+        let mut pipe3 = therminolPipeVec[2].clone();
+
+        // for reference, the outlet temperatures are as follows
+        // T_new1 = 305.91 K
+        // T_new2 = 298.8 K
+        // T_new3 = 295.2 K
+
+
+        let temp_1_val = 305.91_f64;
+        let temp_2_val = 298.8_f64;
+        let temp_3_val = 295.2_f64;
+
+        approx::assert_relative_eq!(
+            temp_1_val,
+            pipe1.fluid_parameters.temperature_data.outlet_temp_new.value,
+            max_relative=0.01);
+
+        approx::assert_relative_eq!(
+            temp_2_val,
+            pipe2.fluid_parameters.temperature_data.outlet_temp_new.value,
+            max_relative=0.01);
+
+        approx::assert_relative_eq!(
+            temp_3_val,
+            pipe3.fluid_parameters.temperature_data.outlet_temp_new.value,
+            max_relative=0.01);
+
+        // likewise, let's assert the new inlet temperatures too
+
+        approx::assert_relative_eq!(
+            temp_1_val,
+            pipe2.fluid_parameters.temperature_data.inlet_temp_new.value,
+            max_relative=0.01);
+
+        approx::assert_relative_eq!(
+            temp_2_val,
+            pipe3.fluid_parameters.temperature_data.inlet_temp_new.value,
+            max_relative=0.01);
+
+        approx::assert_relative_eq!(
+            temp_3_val,
+            pipe1.fluid_parameters.temperature_data.inlet_temp_new.value,
+            max_relative=0.01);
     }
 
 }
