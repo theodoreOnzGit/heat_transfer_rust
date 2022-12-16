@@ -22,7 +22,7 @@ mod sandbox_therminol_dowtherm_pipes {
     /// step
     ///
     /// (5) use usize instead of i32 to index vectors, though i32 
-    /// can be readily converted into usize.
+    /// can be readily converted into usize. (changed 1128 hrs 16 Dec 2022)
     ///
     /// (6) power, massfow and work done vectors can be initiated in the struct
     /// as well
@@ -85,7 +85,7 @@ mod sandbox_therminol_dowtherm_pipes {
             = vec![];
 
         pub struct HeatFluxPipeFactory {
-            pub current_max_index: i32,
+            pub current_max_index: usize,
         }
 
         impl HeatFluxPipeFactory {
@@ -689,8 +689,13 @@ FluidProperties;
 use fluid_mechanics_rust::therminol_component::
 dowtherm_a_properties;
 
+
+
+
 /// This struct or class represents a fixed heat
-/// flux therminol pipe
+/// flux therminol pipe, or at least the first version
+///
+///
 /// 
 /// Here, we don't consider conjugate heat transfer 
 /// or anything, but we just supply a fixed heat value to
@@ -1096,7 +1101,7 @@ impl v1_IterativeHeatFluxTherminolPipe {
 
         // let's populate default index data
         
-        let default_index: i32 = 0;
+        let default_index: usize = 0;
 
         let default_index_data = 
             FluidEntityIndexData { 
@@ -1162,7 +1167,7 @@ impl FluidEntityInitialisationSteps for v1_IterativeHeatFluxTherminolPipe {
         timestep: Time,
         initial_global_temp: ThermodynamicTemperature,
         fluid_volume: Volume,
-        fluid_entity_index: i32) -> Self {
+        fluid_entity_index: usize) -> Self {
 
         FluidEntityThermophysicalData::
             step_0_set_timestep_and_initial_temperatures(

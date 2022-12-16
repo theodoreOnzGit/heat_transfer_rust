@@ -35,9 +35,9 @@ pub struct PipeFluidEnthalpyData {
 /// connected to the inlet and outlet
 #[derive(Clone)]
 pub struct FluidEntityIndexData {
-    pub fluid_entity_index: i32,
-    pub inlet_fluid_entity_index: i32,
-    pub outlet_fluid_entity_index: i32,
+    pub fluid_entity_index: usize,
+    pub inlet_fluid_entity_index: usize,
+    pub outlet_fluid_entity_index: usize,
 }
 
 /// This structure stores the basic data for a 
@@ -68,7 +68,7 @@ pub trait FluidEntityInitialisationSteps {
         timestep: Time,
         initial_global_temp: ThermodynamicTemperature,
         fluid_volume: Volume,
-        fluid_entity_index: i32) -> Self;
+        fluid_entity_index: usize) -> Self;
 
     /// Step 1: connect a pipe or some other structure
     /// to the inlet to this component or fluid entity
@@ -100,7 +100,7 @@ for FluidEntityThermophysicalData {
         timestep: Time,
         initial_global_temp: ThermodynamicTemperature,
         fluid_volume: Volume,
-        fluid_entity_index: i32) -> Self {
+        fluid_entity_index: usize) -> Self {
         
         self.timestep = timestep;
         self.fluid_volume = fluid_volume;
