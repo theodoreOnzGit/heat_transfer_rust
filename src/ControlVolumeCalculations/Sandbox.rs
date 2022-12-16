@@ -12,6 +12,8 @@ mod sandbox_therminol_dowtherm_pipes {
     /// rather than go for fluid temperature; the using
     /// T_fluid = (T_in+T_out)/2 does not conserve energy
     ///
+    /// 
+    ///
     /// (2) let the mutable inlet temperature and outlet temperautre
     /// vectors be a a part of the struct, same goes for the calculator
     ///
@@ -708,6 +710,123 @@ pub struct v2_IterativeHeatFluxTherminolPipe {
     pub fluid_parameters: FluidEntityThermophysicalData,
 }
 
+impl v2_IterativeHeatFluxTherminolPipe {
+
+    /// Constructor which creates the structure 
+    /// ```rust
+    /// 
+    /// extern crate approx;
+    /// use heat_transfer_rust::ControlVolumeCalculations::
+    /// TherminolDowthermPipes::*;
+    /// use heat_transfer_rust::ControlVolumeCalculations::
+    /// Sandbox::*;
+    ///
+    /// use uom::si::f64::*;
+    /// use uom::si::time::second;
+    /// use uom::si::thermodynamic_temperature::kelvin;
+    /// use uom::si::volume::cubic_meter;
+    ///
+    /// // first let's initialise a pipe using a timestep
+    /// // global thermodynamic temperature and fluid volume
+    /// 
+    /// let timestep = Time::new::<second>(0.1_f64);
+    /// let initial_global_temp = ThermodynamicTemperature::
+    /// new::<kelvin>(300_f64);
+    ///
+    /// let fluid_volume = Volume::new::<cubic_meter>(
+    /// 0.01_f64.powf(3_f64));
+    ///
+    /// let fluid_entity_index: usize = 4;
+    ///
+    /// // we are now going to initialise stuff
+    ///
+    /// use heat_transfer_rust::ControlVolumeCalculations::
+    /// FluidEntity_StructsAndTraits::FluidEntityInitialisationSteps;
+    ///
+    /// let mut pipe1 = v2_IterativeHeatFluxTherminolPipe::new();
+    ///
+    /// pipe1.step_0_set_timestep_and_initial_temperatures(
+    /// timestep,
+    /// initial_global_temp,
+    /// fluid_volume,
+    /// fluid_entity_index);
+    ///
+    ///
+    ///
+    /// ```
+    pub fn new() -> Self {
+
+        // we'll need to make a few data structures first
+        // with some default values
+
+
+        let default_timestep: Time = 
+            Time::new::<second>(0.1);
+
+        let default_fluid_volume: Volume = 
+            Volume::new::<cubic_meter>(0.02_f64.powf(3.0));
+
+        // let's populate default index data
+        
+        let default_index: usize = 0;
+
+        let default_index_data = 
+            FluidEntityIndexData { 
+                fluid_entity_index : default_index ,
+                inlet_fluid_entity_index : default_index,
+                outlet_fluid_entity_index : default_index,
+            };
+
+
+        // let's populate default temperature data
+        //
+
+        let default_temperature : ThermodynamicTemperature 
+            = ThermodynamicTemperature::new::
+            <kelvin>(310_f64);
+
+        let default_temperature_data : PipeFluidTemperatureData  
+            = PipeFluidTemperatureData { 
+                inlet_temp_old: default_temperature, 
+                inlet_temp_new: default_temperature, 
+                outlet_temp_old: default_temperature, 
+                outlet_temp_new: default_temperature, 
+                fluid_temp_old: default_temperature, 
+                fluid_temp_new: default_temperature,
+            };
+
+        // let's finally populate the enthalpy data
+
+        let default_enthalpy : AvailableEnergy =
+            AvailableEnergy::new::<joule_per_kilogram>(0_f64);
+
+        let default_enthalpy_data : PipeFluidEnthalpyData =
+            PipeFluidEnthalpyData { 
+                inlet_enthalpy_old: default_enthalpy, 
+                inlet_enthalpy_new: default_enthalpy, 
+                outlet_enthalpy_old: default_enthalpy, 
+                outlet_enthalpy_new: default_enthalpy, 
+                fluid_enthalpy_old: default_enthalpy, 
+                fluid_enthalpy_new: default_enthalpy 
+            };
+
+        let default_thermophysical_data : FluidEntityThermophysicalData
+            = FluidEntityThermophysicalData { 
+                index_data: default_index_data, 
+                temperature_data: default_temperature_data, 
+                enthalpy_data: default_enthalpy_data, 
+                timestep: default_timestep, 
+                fluid_volume: default_fluid_volume ,
+            };
+
+        return Self { 
+            fluid_parameters: default_thermophysical_data 
+        };
+
+    }
+}
+
+
 impl FluidEntityInitialisationSteps for v2_IterativeHeatFluxTherminolPipe {
     /// step zero, here we set our initial conditions
 
@@ -1320,6 +1439,7 @@ impl TherminolFluidProperties for v2_IterativeHeatFluxTherminolPipe {
 pub struct v1_IterativeHeatFluxTherminolPipe {
     pub fluid_parameters: FluidEntityThermophysicalData,
 }
+
 impl v1_IterativeHeatFluxTherminolPipe {
 
     /// Constructor which creates the structure 

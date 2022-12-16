@@ -1,5 +1,105 @@
 extern crate uom;
+use ndarray::FixedInitializer;
 use uom::si::f64::*;
+use uom::si::mass_rate::kilogram_per_second;
+use crate::ControlVolumeCalculations::Sandbox::*;
+use uom::si::time::second;
+use uom::si::thermodynamic_temperature::kelvin;
+use uom::si::power::watt;
+
+pub struct FluidEntityCollectionV1 {
+
+    pub current_max_index: usize,
+    pub fluid_entity_vector: Vec<v2_IterativeHeatFluxTherminolPipe>,
+    pub inlet_temp_vec: Vec<ThermodynamicTemperature>,
+    pub outlet_temp_vec: Vec<ThermodynamicTemperature>,
+
+    pub heat_input_vec: Vec<Power>,
+    pub work_input_vec: Vec<Power>,
+    pub mass_flowrate_vec: Vec<MassRate>,
+
+    pub timestep: Time,
+    pub initial_global_temp: ThermodynamicTemperature,
+
+}
+
+use crate::ControlVolumeCalculations::FluidEntity_StructsAndTraits::*;
+
+impl FluidEntityCollectionV1 {
+
+    /// default constructor
+    /// sets timestep at 0.1s by default
+    pub fn new() -> Self {
+
+        return Self { 
+            current_max_index: 0, 
+            fluid_entity_vector: vec![], 
+            inlet_temp_vec: vec![], 
+            outlet_temp_vec: vec![], 
+            heat_input_vec: vec![], 
+            work_input_vec: vec![], 
+            mass_flowrate_vec: vec![], 
+
+            /// Default timestep is 0.1s
+            timestep: Time::new::<second>(0.1),
+            /// Default initial global temp is 300k or about 27C
+            initial_global_temp: ThermodynamicTemperature::new::
+                <kelvin>(300.0),
+        }
+
+    }
+
+    pub fn step_0_set_timestep_and_initial_temp(
+        &mut self,
+        timestep: Time,
+        initial_global_temp: ThermodynamicTemperature) {
+
+        self.timestep = timestep;
+        self.initial_global_temp = initial_global_temp;
+    }
+
+
+
+    /// Adds a new fluid component or fluid entity
+    pub fn step_1_add_new_component(
+        &mut self,
+        fluid_volume: Volume
+        ) {
+
+        let mut new_pipe = v2_IterativeHeatFluxTherminolPipe::new();
+
+        let fluid_entity_index = self.current_max_index;
+
+        // we make a new fluid entity
+        new_pipe.step_0_set_timestep_and_initial_temperatures(
+            self.timestep,
+            self.initial_global_temp,
+            fluid_volume,
+            fluid_entity_index);
+
+        // i will push the default new pipe with fluid volume
+        // and push the default initial temperatures into the
+        // temperature inlet and outlet vectors
+        self.fluid_entity_vector.push(new_pipe);
+        self.inlet_temp_vec.push(self.initial_global_temp.clone());
+        self.outlet_temp_vec.push(self.initial_global_temp.clone());
+
+        // i will then push the default work done and heat input into
+        // these vectors
+
+        self.work_input_vec.push(
+            Power::new::<watt>(0.0));
+        self.heat_input_vec.push(
+            Power::new::<watt>(0.0));
+
+
+        // the mass flowrate is also by default set to zero
+
+        self.mass_flowrate_vec.push(
+            MassRate::new::<kilogram_per_second>(0.0));
+
+    }
+}
 
 /// For explicit calculations in general
 ///
