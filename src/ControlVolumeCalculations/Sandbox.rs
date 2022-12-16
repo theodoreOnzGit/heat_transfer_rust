@@ -1,5 +1,46 @@
+#[warn(missing_docs)]
+
 #[cfg(test)]
 mod sandbox_therminol_dowtherm_pipes {
+    /// from this sandbox, i am experimenting with 
+    /// using a struct and its methods to build my therminolPipes
+    /// and run through their calculation steps at every timestep
+    ///
+    /// so far i've learnt that:
+    ///
+    /// (1) it's better to calculate the outlet temperature directly
+    /// rather than go for fluid temperature; the using
+    /// T_fluid = (T_in+T_out)/2 does not conserve energy
+    ///
+    /// (2) let the mutable inlet temperature and outlet temperautre
+    /// vectors be a a part of the struct, same goes for the calculator
+    ///
+    /// (3) index numbers and vectors to keep track of inlet and outlet
+    /// temperatures seems pretty okay!
+    ///
+    /// (4) setting inlet and outlet temperatures should be the same
+    /// step
+    ///
+    /// (5) use usize instead of i32 to index vectors, though i32 
+    /// can be readily converted into usize.
+    ///
+    /// (6) power, massfow and work done vectors can be initiated in the struct
+    /// as well
+    /// 
+    /// (7) we can set a global timestep and global time in our 
+    /// struct
+    ///
+    /// (8) we may want to have get and set methods for power/work done
+    /// and mass flow
+    ///
+    /// for future consideration:
+    ///
+    /// (1) the inputs for the calculator function may need to extend
+    /// beyond simple pipes if we are to include heat exchangers
+    /// and other things
+    ///
+    /// (2) we might want to implement an ambient .cool() function
+    /// in order to represent heat loss to environment
     #[test]
     pub fn sandbox_autobuild_conenct_and_autocalculation() {
         extern crate approx;
@@ -22,7 +63,6 @@ mod sandbox_therminol_dowtherm_pipes {
             new::<kelvin>(300_f64);
         let fluid_volume = Volume::new::<cubic_meter>(
             0.01_f64.powf(3_f64));
-        let mut fluid_entity_index: i32 = 1;
 
         // first thing first, i want to streamline the pipe creation process
         // (and of course, eventually place those hydrodynamic parameters as well,
