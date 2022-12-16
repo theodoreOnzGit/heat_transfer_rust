@@ -272,7 +272,7 @@ dowtherm_a_properties;
 ///
 /// extern crate ndarray;
 /// use ndarray::prelude::*;
-/// use ndarray_linalg::Solve;
+/// // use ndarray_linalg::Solve;
 ///
 /// // first we make a 2D array 
 /// let matrixA : Array2<f64> = 
@@ -290,12 +290,17 @@ dowtherm_a_properties;
 /// // openblas-static
 /// // https://github.com/rust-ndarray/ndarray-linalg/issues/171
 /// // This means i needed gcc-fortran on my archlinux as well
+/// // 
+/// // now, openblas is linux only, and intel math kernel
+/// // library (intel-mkl) is cross platform but intel only
+/// // i am opting not to use openblas to ensure this is cross
+/// // platform
 ///
-/// let x = matrixA.solve_into(vectorB).unwrap();
+/// //let x = matrixA.solve_into(vectorB).unwrap();
 ///
-/// approx::assert_relative_eq!(302_f64, x[0], max_relative=0.01);
-/// approx::assert_relative_eq!(309.5_f64, x[1], max_relative=0.01);
-/// approx::assert_relative_eq!(288.1_f64, x[2], max_relative=0.01);
+/// //approx::assert_relative_eq!(302_f64, x[0], max_relative=0.01);
+/// //approx::assert_relative_eq!(309.5_f64, x[1], max_relative=0.01);
+/// //approx::assert_relative_eq!(288.1_f64, x[2], max_relative=0.01);
 ///
 ///
 /// // now this solves the thing ok, and it means that there is a 7.5 C
