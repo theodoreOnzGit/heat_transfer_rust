@@ -214,6 +214,11 @@ impl FluidEntityCollectionV1 {
         self.mass_flowrate_vec.push(
             MassRate::new::<kilogram_per_second>(0.0));
 
+
+        // add 1 to the maximum current index
+
+        self.current_max_index = self.current_max_index + 1;
+
         return;
 
     }
@@ -239,11 +244,12 @@ impl FluidEntityCollectionV1 {
         let mut pipe_front = 
             self.fluid_entity_vector[connect_to_pipe_inlet_index].clone();
 
-        self.fluid_entity_vector[connect_to_pipe_outlet_index].
-            step_2_conenct_to_component_outlet(&mut pipe_front);
+        pipe_front.step_1_connect_to_component_inlet(
+            &mut self.fluid_entity_vector[connect_to_pipe_outlet_index]);
 
-        self.fluid_entity_vector[connect_to_pipe_inlet_index].
-            step_1_connect_to_component_inlet(&mut pipe_back);
+        pipe_back.step_2_conenct_to_component_outlet(
+            &mut self.fluid_entity_vector[connect_to_pipe_inlet_index]);
+
 
 
     }
