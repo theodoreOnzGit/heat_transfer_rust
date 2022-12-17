@@ -111,7 +111,90 @@ mod explicit_calc_sandbox {
                    outlet_fluid_entity_index);
 
 
+        // next step is to set the mass flowrate, 
+        // heat inputs and work inputs
+        //
 
+        use uom::si::mass_rate::kilogram_per_second;
+
+        let mass_flowrate = 
+            MassRate::new::<kilogram_per_second>(0.18);
+
+        fluid_entity_collection_obj.step_2_set_mass_flowrate(
+            mass_flowrate, 0);
+        
+        fluid_entity_collection_obj.step_2_set_mass_flowrate(
+            mass_flowrate, 1);
+
+        fluid_entity_collection_obj.step_2_set_mass_flowrate(
+            mass_flowrate, 2);
+
+        assert_eq!(0.180, 
+                   fluid_entity_collection_obj.mass_flowrate_vec[0].value);
+        assert_eq!(0.180, 
+                   fluid_entity_collection_obj.mass_flowrate_vec[1].value);
+        assert_eq!(0.180, 
+                   fluid_entity_collection_obj.mass_flowrate_vec[2].value);
+
+        use uom::si::power::watt;
+
+        let pipe1_heat_rate = 
+            Power::new::<watt>(100.0);
+        let pipe2_heat_rate = 
+            Power::new::<watt>(-20.0);
+        let pipe3_heat_rate = 
+            Power::new::<watt>(-80.0);
+
+        let pipe_work_input_rate = 
+            Power::new::<watt>(0.0);
+
+        // let's set the heat and work
+
+        fluid_entity_collection_obj.step_3_set_work_input(
+            pipe_work_input_rate, 0);
+
+        fluid_entity_collection_obj.step_3_set_work_input(
+            pipe_work_input_rate, 1);
+
+        fluid_entity_collection_obj.step_3_set_work_input(
+            pipe_work_input_rate, 2);
+
+        fluid_entity_collection_obj.step_4_set_heat_input(
+            pipe1_heat_rate, 0);
+
+        fluid_entity_collection_obj.step_4_set_heat_input(
+            pipe2_heat_rate, 1);
+
+        fluid_entity_collection_obj.step_4_set_heat_input(
+            pipe3_heat_rate, 2);
+
+        assert_eq!(100.0, 
+                   fluid_entity_collection_obj.heat_input_vec[0].value);
+        assert_eq!(-20.0, 
+                   fluid_entity_collection_obj.heat_input_vec[1].value);
+        assert_eq!(-80.0, 
+                   fluid_entity_collection_obj.heat_input_vec[2].value);
+
+        assert_eq!(0.0, 
+                   fluid_entity_collection_obj.work_input_vec[0].value);
+        assert_eq!(0.0, 
+                   fluid_entity_collection_obj.work_input_vec[1].value);
+        assert_eq!(0.0, 
+                   fluid_entity_collection_obj.work_input_vec[2].value);
+        // now let's do all the calculation and advance the timestep
+
+        // current bug is here,
+        // i get negative enthalpies,
+        // already ruled out that setting heat and work input is wrong
+        // however, the initial enthalpy of the system at setup
+        // may be a cause with using 
+        // export RUST_BACKTRACE=1 
+        // as an environment variable
+
+        fluid_entity_collection_obj.
+            step_5_calculate_all_outlet_enthalpies_and_temperatures();
+        //fluid_entity_collection_obj.step_6_calculate_inlet_temperatures();
+        //fluid_entity_collection_obj.step_7_advance_timestep();
         
     }
 
