@@ -250,7 +250,7 @@ mod sandbox_therminol_dowtherm_pipes {
         // the pipe connected to its front is index 1
         // i'm going to repeat it all for the pipes involved
 
-        let mut pipe1 = therminolPipeVec[0].clone();
+        let pipe1 = therminolPipeVec[0].clone();
 
         assert_eq!(0, pipe1.fluid_parameters.index_data.fluid_entity_index);
 
@@ -260,7 +260,7 @@ mod sandbox_therminol_dowtherm_pipes {
         assert_eq!(1, pipe1.fluid_parameters.index_data.
                    outlet_fluid_entity_index);
 
-        let mut pipe2 = therminolPipeVec[1].clone();
+        let pipe2 = therminolPipeVec[1].clone();
 
         assert_eq!(1, pipe2.fluid_parameters.index_data.
                    fluid_entity_index);
@@ -271,7 +271,7 @@ mod sandbox_therminol_dowtherm_pipes {
         assert_eq!(2, pipe2.fluid_parameters.index_data.
                    outlet_fluid_entity_index);
 
-        let mut pipe3 = therminolPipeVec[2].clone();
+        let pipe3 = therminolPipeVec[2].clone();
 
         assert_eq!(2, pipe3.fluid_parameters.index_data.
                    fluid_entity_index);

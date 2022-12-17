@@ -110,6 +110,8 @@ mod explicit_calc_sandbox {
         assert_eq!(0, pipe3.fluid_parameters.index_data.
                    outlet_fluid_entity_index);
 
+
+
         
     }
 
@@ -249,8 +251,6 @@ impl FluidEntityCollectionV1 {
 
         pipe_back.step_2_conenct_to_component_outlet(
             &mut self.fluid_entity_vector[connect_to_pipe_inlet_index]);
-
-
 
     }
 
