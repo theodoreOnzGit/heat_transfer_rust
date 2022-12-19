@@ -46,6 +46,11 @@ mod explicit_calc_sandbox {
             initial_global_temp);
 
         // then we add pipe 1, pipe 2 and pipe 3
+        // First let's check the enthalpy at 300K
+        //
+
+
+
 
         // index 0
         fluid_entity_collection_obj.setup_step_1_add_new_component(
@@ -62,6 +67,60 @@ mod explicit_calc_sandbox {
             "pipe3".to_string(), 
             fluid_volume);
 
+        // after adding these pipes, i must have their enthalpy equal to
+        // that at 300K
+
+        use crate::ControlVolumeCalculations::TherminolDowthermPipes::
+            TherminolFluidProperties;
+
+        pub struct TestDowthermAProps {}
+        impl TherminolFluidProperties for TestDowthermAProps {}
+
+        let reference_enthalpy = TestDowthermAProps::
+            enthalpy(initial_global_temp);
+
+        // panic!("{}",reference_enthalpy.value.to_string());
+        //
+        let temp_300k = TestDowthermAProps::
+            get_temperature_from_enthalpy(reference_enthalpy);
+
+        approx::assert_relative_eq!(300.0,temp_300k.value,
+                                    max_relative = 0.01);
+
+
+        let mut pipe1 = fluid_entity_collection_obj.
+            fluid_entity_vector[0].clone();
+
+        approx::assert_relative_eq!(
+            reference_enthalpy.value,
+            pipe1.fluid_parameters.enthalpy_data.
+            inlet_enthalpy_old.value,
+            max_relative = 0.001);
+
+        approx::assert_relative_eq!(
+            reference_enthalpy.value,
+            pipe1.fluid_parameters.enthalpy_data.
+            outlet_enthalpy_old.value,
+            max_relative = 0.001);
+
+        approx::assert_relative_eq!(
+            reference_enthalpy.value,
+            pipe1.fluid_parameters.enthalpy_data.
+            fluid_enthalpy_old.value,
+            max_relative = 0.001);
+
+
+        let mut pipe2 = fluid_entity_collection_obj.
+            fluid_entity_vector[1].clone();
+
+        let mut pipe3 = fluid_entity_collection_obj.
+            fluid_entity_vector[2].clone();
+
+
+        // after adding these temperatures, we should assert that
+        // the enthalpy is the same as the enthalpy at 300K 
+        // which is the global temperature
+
         // now to connect the pipes in this fashion
         // 1 -> 2 -> 3 
         // and 3 connects back to 1 in a circular fashion
@@ -77,7 +136,7 @@ mod explicit_calc_sandbox {
 
 
         // if connected correctly, this should pass:
-        let pipe1 = fluid_entity_collection_obj.
+        let mut pipe1 = fluid_entity_collection_obj.
             fluid_entity_vector[0].clone();
 
         assert_eq!(0, pipe1.fluid_parameters.index_data.fluid_entity_index);
@@ -88,7 +147,7 @@ mod explicit_calc_sandbox {
         assert_eq!(1, pipe1.fluid_parameters.index_data.
                    outlet_fluid_entity_index);
 
-        let pipe2 = fluid_entity_collection_obj.
+        let mut pipe2 = fluid_entity_collection_obj.
             fluid_entity_vector[1].clone();
 
         assert_eq!(1, pipe2.fluid_parameters.index_data.
@@ -100,7 +159,7 @@ mod explicit_calc_sandbox {
         assert_eq!(2, pipe2.fluid_parameters.index_data.
                    outlet_fluid_entity_index);
 
-        let pipe3 = fluid_entity_collection_obj.
+        let mut pipe3 = fluid_entity_collection_obj.
             fluid_entity_vector[2].clone();
 
         assert_eq!(2, pipe3.fluid_parameters.index_data.
@@ -253,6 +312,8 @@ impl FluidEntityCollectionV1 {
 
         self.timestep = timestep;
         self.initial_global_temp = initial_global_temp;
+
+        
     }
 
 
