@@ -87,9 +87,30 @@ mod explicit_calc_sandbox {
         approx::assert_relative_eq!(300.0,temp_300k.value,
                                     max_relative = 0.01);
 
+        fluid_entity_collection_obj.
+            step_1_calculate_current_timestep_temp_enthalpies();
+
 
         let mut pipe1 = fluid_entity_collection_obj.
             fluid_entity_vector[0].clone();
+
+        approx::assert_relative_eq!(
+            300.0,
+            pipe1.fluid_parameters.temperature_data.
+            inlet_temp_old.value,
+            max_relative = 0.001);
+
+        approx::assert_relative_eq!(
+            300.0,
+            pipe1.fluid_parameters.temperature_data.
+            outlet_temp_old.value,
+            max_relative = 0.001);
+
+        approx::assert_relative_eq!(
+            300.0,
+            pipe1.fluid_parameters.temperature_data.
+            fluid_temp_old.value,
+            max_relative = 0.001);
 
         approx::assert_relative_eq!(
             reference_enthalpy.value,
@@ -113,9 +134,44 @@ mod explicit_calc_sandbox {
         let mut pipe2 = fluid_entity_collection_obj.
             fluid_entity_vector[1].clone();
 
+        approx::assert_relative_eq!(
+            reference_enthalpy.value,
+            pipe2.fluid_parameters.enthalpy_data.
+            inlet_enthalpy_old.value,
+            max_relative = 0.001);
+
+        approx::assert_relative_eq!(
+            reference_enthalpy.value,
+            pipe2.fluid_parameters.enthalpy_data.
+            outlet_enthalpy_old.value,
+            max_relative = 0.001);
+
+        approx::assert_relative_eq!(
+            reference_enthalpy.value,
+            pipe2.fluid_parameters.enthalpy_data.
+            fluid_enthalpy_old.value,
+            max_relative = 0.001);
+
         let mut pipe3 = fluid_entity_collection_obj.
             fluid_entity_vector[2].clone();
 
+        approx::assert_relative_eq!(
+            reference_enthalpy.value,
+            pipe3.fluid_parameters.enthalpy_data.
+            inlet_enthalpy_old.value,
+            max_relative = 0.001);
+
+        approx::assert_relative_eq!(
+            reference_enthalpy.value,
+            pipe3.fluid_parameters.enthalpy_data.
+            outlet_enthalpy_old.value,
+            max_relative = 0.001);
+
+        approx::assert_relative_eq!(
+            reference_enthalpy.value,
+            pipe3.fluid_parameters.enthalpy_data.
+            fluid_enthalpy_old.value,
+            max_relative = 0.001);
 
         // after adding these temperatures, we should assert that
         // the enthalpy is the same as the enthalpy at 300K 
@@ -136,7 +192,7 @@ mod explicit_calc_sandbox {
 
 
         // if connected correctly, this should pass:
-        let mut pipe1 = fluid_entity_collection_obj.
+        pipe1 = fluid_entity_collection_obj.
             fluid_entity_vector[0].clone();
 
         assert_eq!(0, pipe1.fluid_parameters.index_data.fluid_entity_index);
@@ -147,7 +203,7 @@ mod explicit_calc_sandbox {
         assert_eq!(1, pipe1.fluid_parameters.index_data.
                    outlet_fluid_entity_index);
 
-        let mut pipe2 = fluid_entity_collection_obj.
+        pipe2 = fluid_entity_collection_obj.
             fluid_entity_vector[1].clone();
 
         assert_eq!(1, pipe2.fluid_parameters.index_data.
@@ -159,7 +215,7 @@ mod explicit_calc_sandbox {
         assert_eq!(2, pipe2.fluid_parameters.index_data.
                    outlet_fluid_entity_index);
 
-        let mut pipe3 = fluid_entity_collection_obj.
+        pipe3 = fluid_entity_collection_obj.
             fluid_entity_vector[2].clone();
 
         assert_eq!(2, pipe3.fluid_parameters.index_data.
@@ -396,6 +452,23 @@ impl FluidEntityCollectionV1 {
         pipe_back.step_2_conenct_to_component_outlet(
             &mut self.fluid_entity_vector[connect_to_pipe_inlet_index]);
 
+    }
+
+    /// Now we are going into running the simulation
+    /// the first step is to calculate the current timestep 
+    /// temperature and enthalpies
+
+    pub fn step_1_calculate_current_timestep_temp_enthalpies(
+        &mut self) {
+
+        // start the for loop
+        let max_vec_index_plus_one = 
+            self.fluid_entity_vector.len();
+
+        for i in 0..max_vec_index_plus_one {
+            self.fluid_entity_vector[i].
+                step_1_calculate_current_timestep_temp_enthalpies();
+        }
     }
 
     /// Step 2: set mass flowrate for a component with 
