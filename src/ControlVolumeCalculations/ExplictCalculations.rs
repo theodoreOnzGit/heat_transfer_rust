@@ -308,8 +308,8 @@ mod explicit_calc_sandbox {
 
         fluid_entity_collection_obj.
             step_5_calculate_all_outlet_enthalpies_and_temperatures();
-        //fluid_entity_collection_obj.step_6_calculate_inlet_temperatures();
-        //fluid_entity_collection_obj.step_7_advance_timestep();
+        fluid_entity_collection_obj.step_6_calculate_inlet_temperatures();
+        fluid_entity_collection_obj.step_7_advance_timestep();
         
     }
 
