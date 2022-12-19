@@ -65,7 +65,58 @@ mod explicit_calc_sandbox {
             "pipe3".to_string(), 
             fluid_volume);
 
-        // after adding these pipes, i must have their enthalpy equal to
+
+        // now to connect the pipes in this fashion
+        // 1 -> 2 -> 3 
+        // and 3 connects back to 1 in a circular fashion
+
+        fluid_entity_collection_obj.
+            setup_step_2_connect_inlet_and_outlet_pipe(0, 1);
+
+        fluid_entity_collection_obj.
+            setup_step_2_connect_inlet_and_outlet_pipe(1, 2);
+
+        fluid_entity_collection_obj.
+            setup_step_2_connect_inlet_and_outlet_pipe(2, 0);
+
+
+        // if connected correctly, this should pass:
+        let mut pipe1 = fluid_entity_collection_obj.
+            fluid_entity_vector[0].clone();
+
+        assert_eq!(0, pipe1.fluid_parameters.index_data.fluid_entity_index);
+
+        assert_eq!(2, pipe1.fluid_parameters.index_data.
+                   inlet_fluid_entity_index);
+
+        assert_eq!(1, pipe1.fluid_parameters.index_data.
+                   outlet_fluid_entity_index);
+
+        let mut pipe2 = fluid_entity_collection_obj.
+            fluid_entity_vector[1].clone();
+
+        assert_eq!(1, pipe2.fluid_parameters.index_data.
+                   fluid_entity_index);
+
+        assert_eq!(0, pipe2.fluid_parameters.index_data.
+                   inlet_fluid_entity_index);
+
+        assert_eq!(2, pipe2.fluid_parameters.index_data.
+                   outlet_fluid_entity_index);
+
+        let mut pipe3 = fluid_entity_collection_obj.
+            fluid_entity_vector[2].clone();
+
+        assert_eq!(2, pipe3.fluid_parameters.index_data.
+                   fluid_entity_index);
+        assert_eq!(1, pipe3.fluid_parameters.index_data.
+                   inlet_fluid_entity_index);
+        assert_eq!(0, pipe3.fluid_parameters.index_data.
+                   outlet_fluid_entity_index);
+
+
+        // after adding and connecting
+        // these pipes, i must have their enthalpy equal to
         // that at 300K
 
         use crate::ControlVolumeCalculations::TherminolDowthermPipes::
@@ -89,7 +140,7 @@ mod explicit_calc_sandbox {
             step_1_calculate_current_timestep_temp_enthalpies();
 
 
-        let mut pipe1 = fluid_entity_collection_obj.
+        pipe1 = fluid_entity_collection_obj.
             fluid_entity_vector[0].clone();
 
         approx::assert_relative_eq!(
@@ -129,7 +180,7 @@ mod explicit_calc_sandbox {
             max_relative = 0.001);
 
 
-        let mut pipe2 = fluid_entity_collection_obj.
+        pipe2 = fluid_entity_collection_obj.
             fluid_entity_vector[1].clone();
 
         approx::assert_relative_eq!(
@@ -150,7 +201,7 @@ mod explicit_calc_sandbox {
             fluid_enthalpy_old.value,
             max_relative = 0.001);
 
-        let mut pipe3 = fluid_entity_collection_obj.
+        pipe3 = fluid_entity_collection_obj.
             fluid_entity_vector[2].clone();
 
         approx::assert_relative_eq!(
@@ -174,56 +225,6 @@ mod explicit_calc_sandbox {
         // after adding these temperatures, we should assert that
         // the enthalpy is the same as the enthalpy at 300K 
         // which is the global temperature
-
-        // now to connect the pipes in this fashion
-        // 1 -> 2 -> 3 
-        // and 3 connects back to 1 in a circular fashion
-
-        fluid_entity_collection_obj.
-            setup_step_2_connect_inlet_and_outlet_pipe(0, 1);
-
-        fluid_entity_collection_obj.
-            setup_step_2_connect_inlet_and_outlet_pipe(1, 2);
-
-        fluid_entity_collection_obj.
-            setup_step_2_connect_inlet_and_outlet_pipe(2, 0);
-
-
-        // if connected correctly, this should pass:
-        pipe1 = fluid_entity_collection_obj.
-            fluid_entity_vector[0].clone();
-
-        assert_eq!(0, pipe1.fluid_parameters.index_data.fluid_entity_index);
-
-        assert_eq!(2, pipe1.fluid_parameters.index_data.
-                   inlet_fluid_entity_index);
-
-        assert_eq!(1, pipe1.fluid_parameters.index_data.
-                   outlet_fluid_entity_index);
-
-        pipe2 = fluid_entity_collection_obj.
-            fluid_entity_vector[1].clone();
-
-        assert_eq!(1, pipe2.fluid_parameters.index_data.
-                   fluid_entity_index);
-
-        assert_eq!(0, pipe2.fluid_parameters.index_data.
-                   inlet_fluid_entity_index);
-
-        assert_eq!(2, pipe2.fluid_parameters.index_data.
-                   outlet_fluid_entity_index);
-
-        pipe3 = fluid_entity_collection_obj.
-            fluid_entity_vector[2].clone();
-
-        assert_eq!(2, pipe3.fluid_parameters.index_data.
-                   fluid_entity_index);
-        assert_eq!(1, pipe3.fluid_parameters.index_data.
-                   inlet_fluid_entity_index);
-        assert_eq!(0, pipe3.fluid_parameters.index_data.
-                   outlet_fluid_entity_index);
-
-
         // next step is to set the mass flowrate, 
         // heat inputs and work inputs
         //
@@ -364,6 +365,239 @@ mod explicit_calc_sandbox {
 }
 
 
+/// A structure to help calculate enthalpies and temperatures
+/// for each time step. Experimental version 1
+///
+/// The fluid entity collection struct or class helps you to
+/// calculate enthalpies and temperatures of Dowtherm A
+/// pipes given a vector of work inputs, mass rate (flowrate)
+/// inputs and heat inputs into the fluid control volume
+///
+///
+/// Note: backwards flow is NOT supported yet.
+///
+/// The basic idea is to setup the collection first, 
+/// this helps you set the initial temperatures,
+/// add pipe objects, connect them in sequence
+///
+///
+/// here's how you may use it:
+///
+/// There are three setup steps which you need to use:
+/// ```rust
+///
+///
+/// // start with some important imports
+///
+/// extern crate approx;
+/// use heat_transfer_rust::ControlVolumeCalculations::Sandbox::
+///     v2_IterativeHeatFluxTherminolPipe;
+/// use heat_transfer_rust::ControlVolumeCalculations::ExplictCalculations::
+///     FluidEntityCollectionV1;
+/// use heat_transfer_rust:: ControlVolumeCalculations::FluidEntity_StructsAndTraits::
+///     FluidEntityInitialisationSteps;
+/// use uom::si::f64::*;
+/// use uom::si::time::second;
+/// use uom::si::thermodynamic_temperature::kelvin;
+/// use uom::si::volume::cubic_meter;
+///
+///
+///
+///
+/// // instantiate a new fluid entity collection object
+///
+/// let mut fluid_entity_collection_obj = 
+///     FluidEntityCollectionV1::new();
+///
+///
+///
+/// // Setup Step 0: initiate timestep and global initial temp
+///
+/// let timestep = Time::new::<second>(0.1_f64);
+/// let initial_global_temp = ThermodynamicTemperature::
+///     new::<kelvin>(300_f64);
+/// let fluid_volume = Volume::new::<cubic_meter>(
+///     0.01_f64.powf(3_f64));
+///
+///
+/// fluid_entity_collection_obj.setup_step_0_set_timestep_and_initial_temp(
+///     timestep, 
+///     initial_global_temp);
+///
+///
+/// // Setup Step 1: we add 3 pipes
+///
+/// fluid_entity_collection_obj.setup_step_1_add_new_component(
+///     "pipe1".to_string(), 
+///     fluid_volume);
+///
+/// fluid_entity_collection_obj.setup_step_1_add_new_component(
+///     "pipe2".to_string(), 
+///     fluid_volume);
+///
+/// fluid_entity_collection_obj.setup_step_1_add_new_component(
+///     "pipe3".to_string(), 
+///     fluid_volume);
+///
+/// 
+/// // Setup Step 2: connect the pipes
+/// // in this example, i connect like so:
+///
+///
+/// // pipe1 --> pipe2 --> pipe3,
+/// // pipe3 then connects back to pipe1
+///
+/// // to connect however, you need to know the index of the pipe
+/// // the index is usually determined by the order you add
+/// // the pipes to the fluid_entity_collection object
+///
+/// // pipe1 will be index 0,
+/// // pipe2 will be index 1,
+/// // pipe3 will be index 2
+/// // and so on
+///
+///
+/// // to check the index, it's kind of not user friendly,
+/// // but you have to check the the list or vector of names
+/// // get the index and check what the name of it is
+/// // this user unfriendliness 
+/// // can and should be sorted in future versions.
+///
+/// assert_eq!("pipe1".to_string(), 
+/// fluid_entity_collection_obj.component_name_vec[0]);
+/// 
+/// assert_eq!("pipe2".to_string(), 
+/// fluid_entity_collection_obj.component_name_vec[1]);
+///
+/// assert_eq!("pipe3".to_string(), 
+/// fluid_entity_collection_obj.component_name_vec[2]);
+///
+/// // now that we know the index, we can connect the pipes by
+/// // index
+///
+/// fluid_entity_collection_obj.
+///     setup_step_2_connect_inlet_and_outlet_pipe(0, 1);
+///
+/// fluid_entity_collection_obj.
+///     setup_step_2_connect_inlet_and_outlet_pipe(1, 2);
+///
+/// fluid_entity_collection_obj.
+///     setup_step_2_connect_inlet_and_outlet_pipe(2, 0);
+///
+/// // now your setup is complete!
+///
+///
+/// // Let's now run through a sequence of calculation.
+/// // Assume that for this timestep, 100W of heat is added
+/// // to pipe1, 
+/// // -80W of heat to pipe2
+/// // and 
+/// // -20W of heat to pipe3
+///
+///
+///
+///
+/// ```
+///
+///
+/// Now that you have setup the problem, the next thing is to run it!
+/// ```rust
+///
+///
+/// // start with some important imports
+///
+/// extern crate approx;
+/// use heat_transfer_rust::ControlVolumeCalculations::Sandbox::
+///     v2_IterativeHeatFluxTherminolPipe;
+/// use heat_transfer_rust::ControlVolumeCalculations::ExplictCalculations::
+///     FluidEntityCollectionV1;
+/// use heat_transfer_rust:: ControlVolumeCalculations::FluidEntity_StructsAndTraits::
+///     FluidEntityInitialisationSteps;
+/// use uom::si::f64::*;
+/// use uom::si::time::second;
+/// use uom::si::thermodynamic_temperature::kelvin;
+/// use uom::si::volume::cubic_meter;
+///
+///
+///
+///
+/// // instantiate a new fluid entity collection object
+///
+/// let mut fluid_entity_collection_obj = 
+///     FluidEntityCollectionV1::new();
+///
+///
+///
+/// // Setup Step 0: initiate timestep and global initial temp
+///
+/// let timestep = Time::new::<second>(0.1_f64);
+/// let initial_global_temp = ThermodynamicTemperature::
+///     new::<kelvin>(300_f64);
+/// let fluid_volume = Volume::new::<cubic_meter>(
+///     0.01_f64.powf(3_f64));
+///
+///
+/// fluid_entity_collection_obj.setup_step_0_set_timestep_and_initial_temp(
+///     timestep, 
+///     initial_global_temp);
+///
+///
+/// // Setup Step 1: we add 3 pipes
+///
+/// fluid_entity_collection_obj.setup_step_1_add_new_component(
+///     "pipe1".to_string(), 
+///     fluid_volume);
+///
+/// fluid_entity_collection_obj.setup_step_1_add_new_component(
+///     "pipe2".to_string(), 
+///     fluid_volume);
+///
+/// fluid_entity_collection_obj.setup_step_1_add_new_component(
+///     "pipe3".to_string(), 
+///     fluid_volume);
+///
+/// 
+/// // Setup Step 2: connect the pipes
+/// // in this example, i connect like so:
+///
+///
+/// // pipe1 --> pipe2 --> pipe3,
+/// // pipe3 then connects back to pipe1
+///
+/// fluid_entity_collection_obj.
+///     setup_step_2_connect_inlet_and_outlet_pipe(0, 1);
+///
+/// fluid_entity_collection_obj.
+///     setup_step_2_connect_inlet_and_outlet_pipe(1, 2);
+///
+/// fluid_entity_collection_obj.
+///     setup_step_2_connect_inlet_and_outlet_pipe(2, 0);
+///
+/// // now your setup is complete!
+///
+/// 
+///
+/// ```
+///
+///
+///
+/// to update in future version:
+///
+/// (1) creating pipes with strings should be easier, so that we do not have
+/// to use the .to_string() method
+///
+/// (2) connecting pipes by name should be easier, so we don't have to use
+/// pipe indices, but rather pipe names. So
+/// we should be able to use both names and indices to connect the pipes
+///
+/// (3) backwards flow
+///
+/// (4) iter_mut() methods in for loops
+///
+///
+///
+///
+///
 pub struct FluidEntityCollectionV1 {
 
     pub current_max_index: usize,
