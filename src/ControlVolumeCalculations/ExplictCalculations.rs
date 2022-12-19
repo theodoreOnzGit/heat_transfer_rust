@@ -486,15 +486,7 @@ mod explicit_calc_sandbox {
 ///
 /// // now your setup is complete!
 ///
-///
-/// // Let's now run through a sequence of calculation.
-/// // Assume that for this timestep, 100W of heat is added
-/// // to pipe1, 
-/// // -80W of heat to pipe2
-/// // and 
-/// // -20W of heat to pipe3
-///
-///
+/// // end of setup demo
 ///
 ///
 /// ```
@@ -517,7 +509,8 @@ mod explicit_calc_sandbox {
 /// use uom::si::time::second;
 /// use uom::si::thermodynamic_temperature::kelvin;
 /// use uom::si::volume::cubic_meter;
-///
+/// use uom::si::mass_rate::kilogram_per_second;
+/// use uom::si::power::watt;
 ///
 ///
 ///
@@ -573,9 +566,112 @@ mod explicit_calc_sandbox {
 /// fluid_entity_collection_obj.
 ///     setup_step_2_connect_inlet_and_outlet_pipe(2, 0);
 ///
-/// // now your setup is complete!
+/// // now your setup is complete, we can move on to
+/// // proper timestep calcs
 ///
+/// // Let's now run through a sequence of calculation.
+/// // Assume that for this timestep, 100W of heat is added
+/// // to pipe1, 
+/// // -80W of heat to pipe2
+/// // and 
+/// // -20W of heat to pipe3
+/// // no work is done on the pipes
+/// // and the mass flowrate through each pipe is
+/// // 0.18 kg/s
+///
+/// // we can first initiate some of these
+/// // power values first
+///
+/// let pipe1_heat_rate = 
+///     Power::new::<watt>(100.0);
+/// let pipe2_heat_rate = 
+///     Power::new::<watt>(-20.0);
+/// let pipe3_heat_rate = 
+///     Power::new::<watt>(-80.0);
+/// let pipe_work_input_rate = 
+///     Power::new::<watt>(0.0);
 /// 
+///
+/// let mass_flowrate = 
+///    MassRate::new::<kilogram_per_second>(0.18);
+/// 
+/// fluid_entity_collection_obj.
+///     step_1_calculate_current_timestep_temp_enthalpies();
+///
+/// fluid_entity_collection_obj.
+/// step_2_set_mass_flowrate(mass_flowrate,0);
+/// fluid_entity_collection_obj.
+/// step_2_set_mass_flowrate(mass_flowrate,1);
+/// fluid_entity_collection_obj.
+/// step_2_set_mass_flowrate(mass_flowrate,2);
+///
+/// fluid_entity_collection_obj.
+/// step_3_set_work_input(pipe_work_input_rate,0);
+/// fluid_entity_collection_obj.
+/// step_3_set_work_input(pipe_work_input_rate,1);
+/// fluid_entity_collection_obj.
+/// step_3_set_work_input(pipe_work_input_rate,2);
+///
+/// fluid_entity_collection_obj.
+/// step_4_set_heat_input(pipe1_heat_rate,0);
+/// fluid_entity_collection_obj.
+/// step_4_set_heat_input(pipe2_heat_rate,1);
+/// fluid_entity_collection_obj.
+/// step_4_set_heat_input(pipe3_heat_rate,2);
+///
+/// fluid_entity_collection_obj.
+/// step_5_calculate_all_outlet_enthalpies_and_temperatures();
+/// fluid_entity_collection_obj.
+/// step_6_calculate_inlet_temperatures();
+/// fluid_entity_collection_obj.
+/// step_7_advance_timestep();
+///
+///
+/// // if everything works out right,
+/// // the outlet temperatures of each pipe
+///
+/// let pipe1_outlet_temp_val = 305.91_f64;
+/// let pipe2_outlet_temp_val = 298.8_f64;
+/// let pipe3_outlet_temp_val = 295.2_f64;
+///
+/// let mut pipe1 = fluid_entity_collection_obj.fluid_entity_vector[0].clone();
+/// let mut pipe2 = fluid_entity_collection_obj.fluid_entity_vector[1].clone();
+/// let mut pipe3 = fluid_entity_collection_obj.fluid_entity_vector[2].clone();
+///
+/// approx::assert_relative_eq!(
+///     pipe1_outlet_temp_val,
+///     pipe1.fluid_parameters.temperature_data.outlet_temp_old.value,
+///     max_relative=0.01);
+///
+/// approx::assert_relative_eq!(
+///     pipe2_outlet_temp_val,
+///     pipe2.fluid_parameters.temperature_data.outlet_temp_old.value,
+///     max_relative=0.01);
+///
+/// approx::assert_relative_eq!(
+///     pipe3_outlet_temp_val,
+///     pipe3.fluid_parameters.temperature_data.outlet_temp_old.value,
+///     max_relative=0.01);
+///
+/// // additionally, pipe3's outlet is the same as pipe1's inlet
+/// // pipe1's outlet is the same as pipe2's inlet
+/// // pipe2's outlet is the same as pipe3's inlet
+/// // this was based on the way we connected our pipes
+///
+/// approx::assert_relative_eq!(
+///     pipe1_outlet_temp_val,
+///     pipe2.fluid_parameters.temperature_data.inlet_temp_old.value,
+///     max_relative=0.01);
+///
+/// approx::assert_relative_eq!(
+///     pipe2_outlet_temp_val,
+///     pipe3.fluid_parameters.temperature_data.inlet_temp_old.value,
+///     max_relative=0.01);
+///
+/// approx::assert_relative_eq!(
+///     pipe3_outlet_temp_val,
+///     pipe1.fluid_parameters.temperature_data.inlet_temp_old.value,
+///     max_relative=0.01);
 ///
 /// ```
 ///
@@ -592,7 +688,14 @@ mod explicit_calc_sandbox {
 ///
 /// (3) backwards flow
 ///
-/// (4) iter_mut() methods in for loops
+/// (4) iter_mut() methods in for loops for parallel
+///
+/// (5) the cooling rate of the pipe should be automatically determined,
+/// doing it manually every timestep is quite tedious
+///
+/// (6) point 5 same goes for work input, and mass flowrate, the user
+/// should specify if there is a standard heat input rate at the heater
+/// and the rest should be autocalculated
 ///
 ///
 ///
