@@ -51,8 +51,6 @@ mod explicit_calc_sandbox {
 
 
 
-
-        // index 0
         fluid_entity_collection_obj.setup_step_1_add_new_component(
             "pipe1".to_string(), 
             fluid_volume);
@@ -310,6 +308,56 @@ mod explicit_calc_sandbox {
             step_5_calculate_all_outlet_enthalpies_and_temperatures();
         fluid_entity_collection_obj.step_6_calculate_inlet_temperatures();
         fluid_entity_collection_obj.step_7_advance_timestep();
+
+
+        // Now we need to assert that the outlet temperatures
+        // are same as the new temperatures
+        //
+        // for reference, the outlet temperatures are as follows
+        // T_new1 = 305.91 K
+        // T_new2 = 298.8 K
+        // T_new3 = 295.2 K
+
+
+        let temp_1_val = 305.91_f64;
+        let temp_2_val = 298.8_f64;
+        let temp_3_val = 295.2_f64;
+
+        pipe1 = fluid_entity_collection_obj.fluid_entity_vector[0].clone();
+        pipe2 = fluid_entity_collection_obj.fluid_entity_vector[1].clone();
+        pipe3 = fluid_entity_collection_obj.fluid_entity_vector[2].clone();
+
+        approx::assert_relative_eq!(
+            temp_1_val,
+            pipe1.fluid_parameters.temperature_data.outlet_temp_old.value,
+            max_relative=0.01);
+
+        approx::assert_relative_eq!(
+            temp_2_val,
+            pipe2.fluid_parameters.temperature_data.outlet_temp_old.value,
+            max_relative=0.01);
+
+        approx::assert_relative_eq!(
+            temp_3_val,
+            pipe3.fluid_parameters.temperature_data.outlet_temp_old.value,
+            max_relative=0.01);
+
+        // likewise, let's assert the old inlet temperatures too
+
+        approx::assert_relative_eq!(
+            temp_1_val,
+            pipe2.fluid_parameters.temperature_data.inlet_temp_old.value,
+            max_relative=0.01);
+
+        approx::assert_relative_eq!(
+            temp_2_val,
+            pipe3.fluid_parameters.temperature_data.inlet_temp_old.value,
+            max_relative=0.01);
+
+        approx::assert_relative_eq!(
+            temp_3_val,
+            pipe1.fluid_parameters.temperature_data.inlet_temp_old.value,
+            max_relative=0.01);
         
     }
 
