@@ -4,7 +4,7 @@ use uom::si::available_energy::joule_per_kilogram;
 use uom::si::f64::*;
 use uom::si::*;
 use uom::si::heat_capacity::joule_per_kelvin;
-use crate::ControlVolumeCalculations::ExplictCalculations::*;
+use crate::ControlVolumeCalculations::ExplicitCalculations::*;
 use crate::ControlVolumeCalculations::
 FluidEntity_StructsAndTraits::*;
 

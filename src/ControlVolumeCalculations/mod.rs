@@ -48,7 +48,7 @@ use uom::si::f64::*;
 /// (2) the temperatures of each part of the fluid
 /// (3) mass of the control volume
 #[allow(non_snake_case)]
-pub mod ExplictCalculations;
+pub mod ExplicitCalculations;
 
 
 /// This module contains commonly used functions for Explicit and

@@ -11,11 +11,13 @@ mod sandbox_therminol_dowtherm_pipes {
     /// (1) it's better to calculate the outlet temperature directly
     /// rather than go for fluid temperature; the using
     /// T_fluid = (T_in+T_out)/2 does not conserve energy
+    /// --> (done and tested 19 dec 2022)
     ///
     /// 
     ///
     /// (2) let the mutable inlet temperature and outlet temperautre
     /// vectors be a a part of the struct, same goes for the calculator
+    /// --> (done and tested 19 dec 2022)
     ///
     ///
     /// (3) index numbers and vectors to keep track of inlet and outlet
@@ -25,6 +27,7 @@ mod sandbox_therminol_dowtherm_pipes {
     ///
     /// (4) setting inlet and outlet temperatures should be the same
     /// step 
+    /// --> (done and tested 19 dec 2022)
     ///
     ///
     ///
@@ -35,16 +38,18 @@ mod sandbox_therminol_dowtherm_pipes {
     ///
     /// (6) power, massfow and work done vectors can be initiated in the struct
     /// as well
+    /// --> (done and tested 19 dec 2022)
     ///
     ///
     /// 
     /// (7) we can set a global timestep and global time in our 
     /// struct
-    ///
+    /// --> (done and tested 19 dec 2022)
     ///
     ///
     /// (8) we may want to have get and set methods for power/work done
     /// and mass flow
+    /// --> (set methods only 19 dec 2022 done and tested)
     ///
     ///
     ///
@@ -287,7 +292,7 @@ mod sandbox_therminol_dowtherm_pipes {
         // one for work done, one for heat input in fluid
         // one for work done on fluid
         //
-        use crate::ControlVolumeCalculations::ExplictCalculations::
+        use crate::ControlVolumeCalculations::ExplicitCalculations::
             v1_ExplicitCalculationSteps;
 
         impl HeatFluxPipeFactory {
@@ -690,7 +695,7 @@ use uom::si::available_energy::joule_per_kilogram;
 use uom::si::f64::*;
 use uom::si::*;
 use uom::si::heat_capacity::joule_per_kelvin;
-use crate::ControlVolumeCalculations::ExplictCalculations::*;
+use crate::ControlVolumeCalculations::ExplicitCalculations::*;
 use crate::ControlVolumeCalculations::
 FluidEntity_StructsAndTraits::*;
 
@@ -1234,7 +1239,7 @@ impl TherminolFluidProperties for v2_IterativeHeatFluxTherminolPipe {
 /// // let's begin step 1 of calculation procedure
 ///
 /// use crate::heat_transfer_rust::ControlVolumeCalculations::
-/// ExplictCalculations::v1_ExplicitCalculationSteps;
+/// ExplicitCalculations::v1_ExplicitCalculationSteps;
 ///
 ///
 /// pipe1.step_1_calculate_current_timestep_temp_enthalpies();

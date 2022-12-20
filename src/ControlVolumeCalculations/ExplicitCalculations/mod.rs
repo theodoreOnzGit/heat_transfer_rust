@@ -32,7 +32,7 @@ mod explicit_calc_sandbox {
         let fluid_volume = Volume::new::<cubic_meter>(
             0.01_f64.powf(3_f64));
 
-        use crate::ControlVolumeCalculations::ExplictCalculations::
+        use crate::ControlVolumeCalculations::ExplicitCalculations::
             FluidEntityCollectionV1;
 
         // instantiate a new fluid entity collection object
@@ -392,7 +392,7 @@ mod explicit_calc_sandbox {
 /// extern crate approx;
 /// use heat_transfer_rust::ControlVolumeCalculations::Sandbox::
 ///     v2_IterativeHeatFluxTherminolPipe;
-/// use heat_transfer_rust::ControlVolumeCalculations::ExplictCalculations::
+/// use heat_transfer_rust::ControlVolumeCalculations::ExplicitCalculations::
 ///     FluidEntityCollectionV1;
 /// use heat_transfer_rust:: ControlVolumeCalculations::FluidEntity_StructsAndTraits::
 ///     FluidEntityInitialisationSteps;
@@ -501,7 +501,7 @@ mod explicit_calc_sandbox {
 /// extern crate approx;
 /// use heat_transfer_rust::ControlVolumeCalculations::Sandbox::
 ///     v2_IterativeHeatFluxTherminolPipe;
-/// use heat_transfer_rust::ControlVolumeCalculations::ExplictCalculations::
+/// use heat_transfer_rust::ControlVolumeCalculations::ExplicitCalculations::
 ///     FluidEntityCollectionV1;
 /// use heat_transfer_rust:: ControlVolumeCalculations::FluidEntity_StructsAndTraits::
 ///     FluidEntityInitialisationSteps;
@@ -686,7 +686,7 @@ mod explicit_calc_sandbox {
 /// pipe indices, but rather pipe names. So
 /// we should be able to use both names and indices to connect the pipes
 ///
-/// (3) backwards flow
+/// (3) backwards flow, bidirectional flow
 ///
 /// (4) iter_mut() methods in for loops for parallel
 ///
@@ -696,6 +696,18 @@ mod explicit_calc_sandbox {
 /// (6) point 5 same goes for work input, and mass flowrate, the user
 /// should specify if there is a standard heat input rate at the heater
 /// and the rest should be autocalculated
+///
+/// (7) generic fluid entity class that is able to perform all these
+/// methods via traits no matter the underlying type (good for heat
+/// exchangers and other components that have different nusselt number
+/// configurations, or connected to some underlying heat structure)
+///
+/// (8) for traits with default implementations, we cannot act upon
+/// the struct directly, however we can interact with the struct
+/// via get/set methods which are to be implemented. Will probably
+/// want a trait with get/set methods for interfacing with variables
+/// and then generic methods which can then use those get and set
+/// methods.
 ///
 ///
 ///
@@ -1169,4 +1181,5 @@ pub trait v1_ExplicitCalculationSteps {
     fn step_6_update_current_timestep_temperatures(
         &mut self);
 }
+
 
