@@ -34,7 +34,198 @@
 //!
 //!
 use uom::si::f64::*;
-use uom::si::power::watt;
+
+/// calcualtes heat flow using a thermal resistance model,
+/// Q/A = - (Delta T) h
+///
+/// thermal resistance is:
+/// (Delta T)/Q = 1/(hA)
+///
+/// we assume there are two convection thermal resistances to worry about
+/// useful if we have a two fluid flow through
+/// a single layer with some thermal resistance
+///
+/// useful if we have some pipe and insulation
+/// and we have hot fluid in the pipe and we want to calculate heat loss
+/// to the external environment
+pub fn obtain_power_two_convection_two_conduction_thermal_resistance(
+    temperature_of_heat_recipient: ThermodynamicTemperature,
+    temperature_of_heat_source: ThermodynamicTemperature,
+    average_surface_area_1: Area,
+    heat_transfer_coefficient_1: HeatTransfer,
+    average_surface_area_2: Area,
+    heat_transfer_coefficient_2: HeatTransfer,
+    average_thermal_conductivity_layer_1: ThermalConductivity,
+    average_wall_surface_area_1: Area,
+    length_of_wall_1: Length,
+    average_thermal_conductivity_layer_2: ThermalConductivity,
+    average_wall_surface_area_2: Area,
+    length_of_wall_2: Length
+    ) -> Power {
+
+
+    // thermal resistance
+    //
+    
+
+    // convection thermal ressistance 1
+    let thermal_resistance_1 = 
+        1.0_f64
+        /average_surface_area_1
+        /heat_transfer_coefficient_1;
+
+
+    // convection thermal resistance 2
+    let thermal_resistance_2 = 
+        1.0_f64
+        /average_surface_area_2
+        /heat_transfer_coefficient_2;
+
+    // (Delta x)/(kA) for first layer
+    let thermal_resistance_3 = 
+        length_of_wall_1
+        /average_thermal_conductivity_layer_1
+        /average_wall_surface_area_1;
+
+    // (Delta x)/(kA) for second layer
+    let thermal_resistance_4 = 
+        length_of_wall_2
+        /average_thermal_conductivity_layer_2
+        /average_wall_surface_area_2;
+
+    let thermal_resistance = 
+        thermal_resistance_1 
+        + thermal_resistance_2
+        + thermal_resistance_3
+        + thermal_resistance_4;
+
+    use super::*;
+    // -Delta T
+    let temperature_interval = 
+        -subtract_two_thermodynamic_temperatures(
+            temperature_of_heat_recipient,
+            temperature_of_heat_source);
+
+
+    let heat_flow: Power = 
+        temperature_interval
+        /thermal_resistance;
+
+    return heat_flow;
+}
+
+/// calcualtes heat flow using a thermal resistance model,
+/// Q/A = - (Delta T) h
+///
+/// thermal resistance is:
+/// (Delta T)/Q = 1/(hA)
+///
+/// we assume there are two convection thermal resistances to worry about
+/// useful if we have a two fluid flow through
+/// a single layer with some thermal resistance
+pub fn obtain_power_two_convection_one_conduction_thermal_resistance(
+    temperature_of_heat_recipient: ThermodynamicTemperature,
+    temperature_of_heat_source: ThermodynamicTemperature,
+    average_surface_area_1: Area,
+    heat_transfer_coefficient_1: HeatTransfer,
+    average_surface_area_2: Area,
+    heat_transfer_coefficient_2: HeatTransfer,
+    average_thermal_conductivity: ThermalConductivity,
+    average_surface_area: Area,
+    length_of_wall: Length
+    ) -> Power {
+
+
+    // thermal resistance
+    //
+    
+
+    let thermal_resistance_1 = 
+        1.0_f64
+        /average_surface_area_1
+        /heat_transfer_coefficient_1;
+
+    let thermal_resistance_2 = 
+        1.0_f64
+        /average_surface_area_2
+        /heat_transfer_coefficient_2;
+
+    // (Delta x)/(kA) for first layer
+    let thermal_resistance_3 = 
+        length_of_wall
+        /average_thermal_conductivity
+        /average_surface_area;
+
+    let thermal_resistance = 
+        thermal_resistance_1 
+        + thermal_resistance_2
+        + thermal_resistance_3;
+
+    use super::*;
+    // -Delta T
+    let temperature_interval = 
+        -subtract_two_thermodynamic_temperatures(
+            temperature_of_heat_recipient,
+            temperature_of_heat_source);
+
+
+    let heat_flow: Power = 
+        temperature_interval
+        /thermal_resistance;
+
+    return heat_flow;
+}
+
+/// calcualtes heat flow using a thermal resistance model,
+/// Q/A = - (Delta T) h
+///
+/// thermal resistance is:
+/// (Delta T)/Q = 1/(hA)
+///
+/// we assume there are two convection thermal resistances to worry about
+/// useful if we have a two fluid flow througha  diathermal wall
+pub fn obtain_power_through_double_convection_thermal_resistance(
+    temperature_of_heat_recipient: ThermodynamicTemperature,
+    temperature_of_heat_source: ThermodynamicTemperature,
+    average_surface_area_1: Area,
+    heat_transfer_coefficient_1: HeatTransfer,
+    average_surface_area_2: Area,
+    heat_transfer_coefficient_2: HeatTransfer,
+    ) -> Power {
+
+
+    // thermal resistance
+    //
+    
+
+    let thermal_resistance_1 = 
+        1.0_f64
+        /average_surface_area_1
+        /heat_transfer_coefficient_1;
+
+    let thermal_resistance_2 = 
+        1.0_f64
+        /average_surface_area_2
+        /heat_transfer_coefficient_2;
+
+    let thermal_resistance = 
+        thermal_resistance_1 
+        + thermal_resistance_2;
+
+    use super::*;
+    // -Delta T
+    let temperature_interval = 
+        -subtract_two_thermodynamic_temperatures(
+            temperature_of_heat_recipient,
+            temperature_of_heat_source);
+
+
+    let heat_flow: Power = 
+        temperature_interval
+        /thermal_resistance;
+
+    return heat_flow;
+}
 
 /// calcualtes heat flow using a thermal resistance model,
 /// Q/A = - (Delta T) h
@@ -93,7 +284,7 @@ pub fn obtain_power_through_two_layer_wall_thermal_resistance(
         /average_thermal_conductivity_layer_1
         /average_surface_area_1;
 
-    // (Delta x)/(kA) for first layer
+    // (Delta x)/(kA) for second layer
     let thermal_resistance_2 = 
         length_of_wall_2
         /average_thermal_conductivity_layer_2
