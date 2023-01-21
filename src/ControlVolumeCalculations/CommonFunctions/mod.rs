@@ -50,9 +50,12 @@ pub fn calculate_enthalpy_flow(
 /// a trait for temperature and specific
 /// enthalpy conversion, not structly necessary to use
 pub trait TemperatureEnthalpyConversion {
+
+    /// obtains specific enthalpy given a fluid temperature
     fn temperature_to_enthalpy(
         fluid_temp: ThermodynamicTemperature) -> AvailableEnergy;
 
+    /// obtains fluid temperature given a specific enthalpy
     fn enthalpy_to_temperature(
         fluid_enthalpy: AvailableEnergy) -> ThermodynamicTemperature;
 }
@@ -74,6 +77,9 @@ pub fn calculate_convection_heat_flux_power_input(
     return h * (temperature_diff) * A; 
 
 }
+
+
+
 
 
 /// calculate overall heat flux power input
