@@ -1,6 +1,8 @@
 extern crate uom;
 use uom::si::f64::*;
 
+// to do: focus more on trait objects
+
 /// This struct contains information for Fluid
 /// Temperatures in a Pipe (ie one inlet and
 /// one outlet)
@@ -13,6 +15,8 @@ pub struct PipeFluidTemperatureData {
     pub fluid_temp_old: ThermodynamicTemperature,
     pub fluid_temp_new: ThermodynamicTemperature
 }
+
+// to do: focus more on trait objects
 
 /// This struct contains information for
 /// Fluid Enthalpy in a Pipe, ie inlet and 

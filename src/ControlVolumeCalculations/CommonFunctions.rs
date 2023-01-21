@@ -47,6 +47,8 @@ pub fn calculate_enthalpy_flow(
 }
 
 
+/// a trait for temperature and specific
+/// enthalpy conversion, not structly necessary to use
 pub trait TemperatureEnthalpyConversion {
     fn temperature_to_enthalpy(
         fluid_temp: ThermodynamicTemperature) -> AvailableEnergy;
