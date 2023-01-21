@@ -4,6 +4,8 @@
 pub mod NusseltCorrelations;
 pub mod ControlVolumeCalculations;
 
+#[macro_use]
+extern crate uom;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

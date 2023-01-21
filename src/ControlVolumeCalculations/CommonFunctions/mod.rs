@@ -1,3 +1,9 @@
+/// thermal resistance models which are used for 
+/// 1D steady state heat conduction problems.
+pub mod thermal_resistance;
+pub use thermal_resistance::*;
+
+
 extern crate uom;
 use uom::si::f64::*;
 /// This function calculates the formula:
