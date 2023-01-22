@@ -1,6 +1,7 @@
 /// calculates the courant number for a fluid
 /// given a one dimensional model
-use uom::{si::{f64::*, volume::cubic_meter, volume_rate::cubic_meter_per_second}, num_traits::Float};
+use uom::{si::{f64::*, volume::cubic_meter, volume_rate::cubic_meter_per_second}, 
+    num_traits::Float};
 
 /// calculates Courant-Friedrichs-Lewy number (CFL)
 /// for 1D cells for fluid flow
