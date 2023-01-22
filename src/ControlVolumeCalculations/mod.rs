@@ -64,10 +64,29 @@ pub mod TherminolDowthermPipes;
 /// This module contains Structs and Traits for
 /// Generic Fluid entities
 ///
+///
+///
 #[allow(non_snake_case)]
 pub mod FluidEntity_StructsAndTraits;
 
 /// This module just helps document the development process and sandboxing
 /// i have done
+/// it serves more as a scratchpad
+/// stuff in here should not be inherited
 #[allow(non_snake_case)]
 pub mod Sandbox;
+
+
+/// This module contains traits useful for constructing control volumes
+///
+/// The difference between this and the fluid entity structs and traits
+/// is that the control volume traits are much more generic,
+/// there can be any number of fluids flowing in and out of the control 
+/// volume whereas FluidEntity_StructsAndTraits deals with single
+/// flow input and output coming out of the pipe
+///
+/// Furthermore, structs and traits found in FluidEntity_StructsAndTraits
+/// tries to incorporate the steps required to solve for temperature at
+/// every time step. Control volume traits do not help you in this manner
+///
+pub mod control_volume_traits;

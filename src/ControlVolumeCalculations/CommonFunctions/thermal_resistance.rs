@@ -120,6 +120,65 @@ pub fn obtain_power_two_convection_two_conduction_thermal_resistance(
 /// thermal resistance is:
 /// (Delta T)/Q = 1/(hA)
 ///
+/// we assume there are one convection thermal resistances to worry about
+/// useful if we want to place a thermal mass inside of the 
+/// thermal resistances
+///
+/// or if we want to calculate the maximum temperature of a heated pebble
+/// or cylinder or block
+/// a single layer with some thermal resistance
+pub fn obtain_power_one_convection_one_conduction_thermal_resistance(
+    temperature_of_heat_recipient: ThermodynamicTemperature,
+    temperature_of_heat_source: ThermodynamicTemperature,
+    average_surface_area_1: Area,
+    heat_transfer_coefficient_1: HeatTransfer,
+    average_thermal_conductivity: ThermalConductivity,
+    average_surface_area: Area,
+    length_of_wall: Length
+    ) -> Power {
+
+
+    // thermal resistance
+    //
+    
+
+    let thermal_resistance_1 = 
+        1.0_f64
+        /average_surface_area_1
+        /heat_transfer_coefficient_1;
+
+
+    // (Delta x)/(kA) for first layer
+    let thermal_resistance_2 = 
+        length_of_wall
+        /average_thermal_conductivity
+        /average_surface_area;
+
+    let thermal_resistance = 
+        thermal_resistance_1 
+        + thermal_resistance_2;
+
+    use super::*;
+    // -Delta T
+    let temperature_interval = 
+        -subtract_two_thermodynamic_temperatures(
+            temperature_of_heat_recipient,
+            temperature_of_heat_source);
+
+
+    let heat_flow: Power = 
+        temperature_interval
+        /thermal_resistance;
+
+    return heat_flow;
+}
+
+/// calcualtes heat flow using a thermal resistance model,
+/// Q/A = - (Delta T) h
+///
+/// thermal resistance is:
+/// (Delta T)/Q = 1/(hA)
+///
 /// we assume there are two convection thermal resistances to worry about
 /// useful if we have a two fluid flow through
 /// a single layer with some thermal resistance

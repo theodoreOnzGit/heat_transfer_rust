@@ -4,6 +4,11 @@ pub mod thermal_resistance;
 pub use thermal_resistance::*;
 
 
+/// courant number, we want to help calculate stability over here
+pub mod courant_number;
+pub use courant_number::*;
+
+
 extern crate uom;
 use uom::si::f64::*;
 /// This function calculates the formula:
@@ -13,6 +18,7 @@ use uom::si::f64::*;
 /// in and out of the system and work done on the system
 /// as well as heat supplied at current timestep or next timestep
 ///
+#[inline]
 pub fn get_control_volume_enthalpy_next_timestep(
     timestep: Time,
     enthalpy_out: Power,

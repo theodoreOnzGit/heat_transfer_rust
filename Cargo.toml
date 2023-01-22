@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 approx = "0.5.1"
-fluid_mechanics_rust = { git = "https://github.com/theodoreOnzGit/fluid_mechanics_rust", version = "0.0.10" }
+fluid_mechanics_rust = { git = "https://github.com/theodoreOnzGit/fluid_mechanics_rust", version = "0.1.0" }
 ndarray = "0.15.6"
 roots = "0.0.8"
 uom = { git = "https://github.com/iliekturtles/uom", version = "0.33.0" }
