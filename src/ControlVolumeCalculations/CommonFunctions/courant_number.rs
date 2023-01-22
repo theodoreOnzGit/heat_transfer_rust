@@ -290,3 +290,29 @@ pub fn courant_number_3d_openfoam_algorithm(
     return Ok(courant_number.value);
 
 }
+
+// courant number for energy?
+
+/// Courant number for heat transfer
+///
+/// For conduction based heat transfer,
+/// Courant number is just the fourier number
+/// but the characteristic length is 
+pub fn courant_number_heat_conduction(
+    alpha_thermal_diffusivity: DiffusionCoefficient,
+    timestep: Time,
+    mesh_length: Length) -> Result<f64, f64>{
+
+    let courant_number = alpha_thermal_diffusivity *
+        timestep
+        / mesh_length
+        / mesh_length;
+
+
+    if courant_number.value > 1_f64 {
+        return Err(courant_number.value);
+    }
+
+    return Ok(courant_number.value);
+
+}
