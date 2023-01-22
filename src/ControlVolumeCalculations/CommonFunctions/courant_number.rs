@@ -292,12 +292,28 @@ pub fn courant_number_3d_openfoam_algorithm(
 }
 
 // courant number for energy?
-
+//
+// the timescale for such things is the time needed
+// to get the system to a steady state value
+//
+// if the system reaches steady state in less than
+// one timestep, i think the courant number is exceeded
+//
+// this is just intuition however, probably need to prove it
+//
+// one other way to think about courant number is knowing the
+// courant number expression for conduction
+// and then derive from there
+//
+// 
+//
 /// Courant number for heat transfer
 ///
 /// For conduction based heat transfer,
 /// Courant number is just the fourier number
 /// but the characteristic length is 
+/// the mesh length
+///
 pub fn courant_number_heat_conduction(
     alpha_thermal_diffusivity: DiffusionCoefficient,
     timestep: Time,
