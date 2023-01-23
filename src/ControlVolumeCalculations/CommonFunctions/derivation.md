@@ -31,6 +31,7 @@ For heat transfer, this intuition is not as obvious.
 
 ## Courant Number in releation to Fundamental Equations
 
+### Conduction Boundary Conditions
 Courant Number is used for transient heat transfer where in 1D:
 
 $$m c_p \frac{\partial T}{\partial t} = 
@@ -71,6 +72,7 @@ $$\frac{\partial T}{\partial t^*} =
 
 And it just so happens to have the same dimensions as the Fourier Number.
 
+### Convection Boundary Condition
 Now suppose we have a convection boundary condition, the Biot number comes
 into play
 
@@ -216,3 +218,169 @@ $$Bi = \frac{h_{fluid}L_{volume-to-surface-area-ratio}}{k_{solid}}$$
 
 All other properties for $\alpha$ are solid thermophysical properties,
 only the fluid heat transfer coefficient is a property of the fluid.
+
+### Transport Boundary Conditions
+
+Now suppose that we have fluid flowing in and out of the control volume
+bringing in and out the scalar, in this case, temperature or more correctly,
+enthalpy
+
+The [scalar transport equation](https://www.cfd-online.com/Wiki/Generic_scalar_transport_equation) can be written as follows
+for enthalpy:
+
+$$  \frac{\partial \rho h}{\partial t} + \nabla \bullet (\rho \vec{u} h) =
+\nabla \bullet (\Gamma \nabla h )$$
+
+$\Gamma$ is the diffusion coefficient for the scalar, in this case it is enthalpy.
+It will be somewhat different from the diffusion coefficient for temperature.
+
+Now, if we just consider one control volume:
+
+$$m_{cv} c_p \frac{\partial T}{\partial t} = \dot{m}_{in}h_{in} -
+\dot{m}_{out} h_{cv}$$
+
+we can simplify the terms assuming pressures don't change so much that
+the $c_p$ changes:
+
+$$dh = c_p dT$$
+
+$$m_{cv} \frac{\partial h_{cv}}{\partial t} = \dot{m}_{in}h_{in} -
+\dot{m}_{out} h_{cv}$$
+
+For this case, the Courant Number is quite straightforward (assuming conduction
+from any of those prior control volumes is quite negligible).
+
+The momentum transport 
+Courant number here will then be the OpenFOAM expression
+
+$$Co = 0.5 \frac{\dot{m}_{in} t_{timestep}}{m_{cv}}
++ 0.5 \frac{\dot{m}_{out} t_{timestep}}{m_{cv}}$$
+
+However, if we were to once again perform our analysis using
+
+$$dh_{cv} = d(h_{cv} - h_{in})$$
+
+and for a simple pipe:
+
+$$\dot{m}_{in} = \dot{m}_{out}$$
+
+
+$$m_{cv} \frac{\partial (h_{cv} - h_{in})}{\partial t} = -\dot{m}_{in}(h_{cv} - 
+h_{in})$$
+
+we get a similar expression for the courant number...
+
+$$m_{cv} \frac{\partial \ln (h_{cv} - h_{in})}{\partial t} = 
+-\dot{m}_{in}$$
+
+$$\ln(h_{cv} - h_{in})_{t=t} - \ln(h_{cv}-h_{in})_{t=0} 
+= - \frac{\dot{m}_{in}}{m_{cv}} t$$
+
+$$(h_{cv} - h_{in}) /(h_{cv}-h_{in})_{t=0} 
+= \exp \left(- \frac{\dot{m}_{in}}{m_{cv}} t \right)$$
+
+We see now the courant number takes the form:
+
+$$Co = \frac{\dot{m}_{in} t_{timestep}}{m_{cv}}$$
+
+and in general, for a control volume with flows in and out,
+
+$$Co = 0.5 \sum_i \frac{|\dot{m}_{i}| t_{timestep}}{m_{cv}} $$
+
+This is taken from OpenFOAM's expression of Courant Number.
+
+In this case though, since we are concerned about scalar transport,
+the cournat number limit for this form is not 1, but instead 0.25.
+
+
+### What if Courant Number Exceeds 0.25?
+
+It is evident that the Courant number for heat transfer will be the main
+bottleneck in timestep for most high prandtl number fluids as the control
+volume Courant number for heat transfer due to flows is already
+more stringent a requirement than the courant number for fluid flow because
+both use the same expression.
+
+$$Co = 0.5 \sum_i \frac{|\dot{m}_{i}| t_{timestep}}{m_{cv}} $$
+
+So what if we exceed the courant number? Basically, we cut the 
+timestep down locally. Hopefully rust is fast enough for this not to be an
+issue.
+
+Here is some rust code that could depict what could happen if courant 
+number exceeds 0.25
+
+```rust
+// .... (this code has not been tested)
+
+let Co: f64 = Co_inflow_and_outflow + Co_conduction + Co_convection
+
+// declare a variable first
+
+let mut timestep_intervals: u16;
+let mut timestep_to_use: f64;
+
+if Co > 0.25 {
+    // check how many times the Co exceeds 0.25
+
+    let times_exceeded: f64 = Co/0.25;
+
+    // probably need to convert here to u16
+    // in actual rust code
+    timestep_intervals = times_exceeded.ceil();
+
+    timestep_to_use = user_supplied_timestep/timestep_intervals;
+} else {
+    // if Co < 0.25 then timestep_intervals = 1
+    timestep_intervals = 1;
+    timestep_to_use = user_supplied_timestep;
+
+}
+
+for i in 0..timestep_intervals {
+    // run calculations here
+
+}
+
+// some cleaning up ..
+
+return control_volume_temperature;
+
+
+```
+
+
+## misc thoughts
+### Conduction in the Fluid across adjacent control volumes
+
+In this analysis of course, we assumed that the axial conduction in the 
+direction of flow was negligible compared to the enthalpy transport due
+to forced flow.
+
+This is quite true except when flows are extremely slow moving, or we have
+some low Prandtl Number fluid.
+
+For high Prandtl number fluids such as oil, the momentum diffusivity is several
+times more than thermal diffusivity. Therefore advection tends to happen
+many times faster than thermal conduction.
+
+However, this conduction is important in the case of blocked flow, or flows
+where the temperature gradient is extremely high such as near the heater or
+heat exchangers. 
+
+In general for pipes, temperature gradients are small enough compared to
+mass flowrates that one can neglect the conduction effects compared to
+advection.
+
+
+
+
+
+
+
+
+
+
+
+
+
