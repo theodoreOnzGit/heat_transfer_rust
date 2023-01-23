@@ -369,3 +369,24 @@ pub fn courant_number_heat_convection(
     return Ok(courant_number.value);
 
 }
+
+/// Courant number for heat transport (ie mass flowrate)
+///
+/// calculate courant number for enthalpy transport based
+/// on mass flowrates on one face
+pub fn single_face_courant_number_enthalpy_flow(
+    mass_flowrate: MassRate,
+    control_volume_mass: Mass,
+    timestep: Time,) -> Result<f64,f64> {
+
+    let courant_number: Ratio = 0.5 * mass_flowrate.abs() 
+        * timestep
+        / control_volume_mass;
+
+    if courant_number.value > 0.25_f64 {
+        return Err(courant_number.value);
+    }
+
+    return Ok(courant_number.value);
+}
+
