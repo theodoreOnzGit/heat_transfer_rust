@@ -307,12 +307,17 @@ pub fn courant_number_3d_openfoam_algorithm(
 //
 // 
 //
-/// Courant number for heat transfer
+/// Courant number for conduction heat transfer
 ///
 /// For conduction based heat transfer,
 /// Courant number is just the fourier number
 /// but the characteristic length is 
 /// the mesh length
+///
+/// Co = Fo
+/// fourier number
+///
+/// will return an error if value is more than 0.25
 ///
 pub fn courant_number_heat_conduction(
     alpha_thermal_diffusivity: DiffusionCoefficient,
@@ -325,7 +330,39 @@ pub fn courant_number_heat_conduction(
         / mesh_length;
 
 
-    if courant_number.value > 1_f64 {
+    if courant_number.value > 0.25_f64 {
+        return Err(courant_number.value);
+    }
+
+    return Ok(courant_number.value);
+
+}
+
+/// Courant number for convection heat transfer
+/// essentially calculates Co = Bi Fo
+///
+/// will return an error if value is more than 0.25
+///
+pub fn courant_number_heat_convection(
+    heat_transfer_coeffcient_for_external_fluid: HeatTransfer,
+    control_volume_thermal_conductivity: ThermalConductivity,
+    volume_cv_to_surface_area_cv_ratio: Length,
+    alpha_thermal_diffusivity: DiffusionCoefficient,
+    timestep: Time,
+    ) -> Result<f64,f64>{
+
+    let biot_number: Ratio = heat_transfer_coeffcient_for_external_fluid
+        *volume_cv_to_surface_area_cv_ratio
+        /control_volume_thermal_conductivity;
+
+    let fourier_number: Ratio = alpha_thermal_diffusivity 
+        *timestep
+        /volume_cv_to_surface_area_cv_ratio
+        /volume_cv_to_surface_area_cv_ratio;
+
+    let courant_number:Ratio = biot_number*fourier_number;
+
+    if courant_number.value > 0.25_f64 {
         return Err(courant_number.value);
     }
 
