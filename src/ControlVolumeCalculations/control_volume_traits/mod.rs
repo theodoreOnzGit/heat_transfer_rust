@@ -20,12 +20,14 @@
 use uom::si::f64::*;
 use super::CommonFunctions::*;
 
+/// traits for pipe like control volumes
+/// ie, one flow in, one flow out
+pub mod pipe;
+pub use pipe::*;
+
+
 /// this is the primary trait for control volume,
 /// meant for making trait objects
-///
-/// it is tightly coupled to the fluid_mechanics_rust package
-/// because it is meant to return
-/// the thermophysical properties struct
 pub trait ControlVolume: ControlVolumeAssociatedFunctions {
 
     // for each calculation, we get our control volume enthalpy
